@@ -1,0 +1,203 @@
+import random
+
+# Clase que representa una partícula
+class particle:
+    def __init__(self, name, Xaxis, Yaxis, lifetime):
+        self.name = name # nombre de la particula
+        self.Xaxis = Xaxis # posicion en x
+        self.Yaxis = Yaxis # posicion en y
+        self.lifetime = lifetime # tiempo de vida de la particula, mas bien deberian ser los pasos, pero yo no pongo las reglas
+        self.originalTime = lifetime # guardamos el tiempo original pa cuando coma, le devolvemos la vida que le quitamos
+        print( # lo presentamos al mundo cruel
+            "Soy "
+            + name
+            + " y nací en la posición "
+            + str(Xaxis)
+            + ", "
+            + str(Yaxis)
+            + ", mi vida es de ",
+            lifetime,
+        )
+
+    # Método que simula un movimiento aleatorio simple
+    # esto es requisito y define los aleatorios
+    def simple_random_walk(self):
+        return random.choice([True, False])
+
+    # Método que simula un movimiento complejo de la partícula
+    def complex_movement(self):
+        while self.lifetime > 0: # mientras la vida no sea 0 o menor demole
+            if (
+                self.lifetime <= 0 # una verificacion extra para cortarlo en caso de vainas
+
+            ):  
+                print(f"La partícula {self.name} ya ha muerto, terminando el ciclo.")
+                break  # Termina el ciclo si la vida es 0 o negativa
+
+            aux_Xaxis = self.Xaxis
+            aux_Yaxis = self.Yaxis
+
+            if self.simple_random_walk(): # nos aventamos el aleatorio pa ver si x o y, True sera x
+                if self.simple_random_walk(): # ahora en x nos aventamos otro pa ver si palante o patras
+                    self.Xaxis += 1 # palante
+                    self.lifetime -= 1 # como se movio le quitamos vida, ahorremos comentarios, no lo pondre en los otros
+                else:
+                    self.Xaxis -= 1 # patras
+                    self.lifetime -= 1 
+            else:
+                if self.simple_random_walk(): # ahora en y nos aventamos otro pa ver si pariba o pabajo
+                    self.Yaxis += 1 # pariba
+                    self.lifetime -= 1
+                else:
+                    self.Yaxis -= 1 # pabajo
+                    self.lifetime -= 1
+
+            if self.Xaxis < 0 or self.Xaxis >= global_dimension or self.Yaxis < 0 or self.Yaxis >= global_dimension: # si se sale de la dimension
+                self.Yaxis = aux_Yaxis # volvemos a la posicion anterior
+                self.Xaxis = aux_Xaxis
+                self.lifetime += 1 # le devolvemos la vida que le quitamos, y descartamos el movimiento
+            else:
+                print(
+                    f"Posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}" # en cada paso tambien imprimimos la posicion y la vida restante
+                )
+
+            self.has_ate() # en cada movimiento verificamos si cayo en comidita ica
+
+
+        print(f"La partícula {self.name} ha muerto en la posición ({self.Xaxis}, {self.Yaxis})") # aqui afuera del ciclo sabemos que murio, veamos donde fue
+ 
+    # Método que verifica si la partícula ha comido
+    def has_ate(self):
+        for food_item in foods:
+            if (
+                food_item.status
+                and food_item.Xaxis == self.Xaxis
+                and food_item.Yaxis == self.Yaxis
+            ):
+                food_item.disappear()
+                self.lifetime += self.originalTime
+                print(
+                    f"{self.name} comió en la posición {self.Xaxis}, {self.Yaxis}, su vida es ahora {self.lifetime}"
+                )
+
+
+# Clase que representa la comida
+class food:
+    def __init__(self, status, Xaxis, Yaxis):
+        self.status = status # estado True es activa, False es porque se la comieron
+        self.Xaxis = Xaxis # eje x
+        self.Yaxis = Yaxis # eje y
+
+    # Método que hace desaparecer la comida
+    def disappear(self):
+        self.status = False # la tiramos a false
+        self.Xaxis = None # chau
+        self.Yaxis = None # chau
+
+
+# Clase que ejecuta la simulación, le iba poner universo pero me parecio muy pretencioso
+class ejecutable:
+    def __init__(self, cicles, particle, dimension, divisions):
+        self.cicles = cicles # ciclos pa la simulacion
+        self.particle = particle # la partícula, actualmente solo es una, pero podria ser un array de particulas
+        self.dimension = dimension # dimension del universo, solo recibimos una porque va a ser cuadrado a menos que esto se cambie, lo que nos joderia mucho, ojala quen o pase
+        print( #info util
+            "La simulacion se ejecutara por",
+            cicles,
+            "ciclos, con las dimensiones de ",
+            dimension,
+            "x",
+            dimension,
+        )
+
+        global global_dimension # programacion sucia cochina puerca, pero asi toca, si encuentras una alternativa que no perjudique mi curriculum me dices
+        global_dimension = self.dimension # la copio pa mandarla a la partícula, es otra pa no ser mas puercos
+
+    # Método que elige un nombre aleatorio de una lista, me gusta que las particulas tengan identidad
+    # creo que es un poco pesado de ejecutar, posible descarte
+    def select_name(self):
+        # Abrir el archivo nombres.txt y leer los nombres
+        # si puedes pon algunos nombres chistosos ahi
+        with open('nombres.txt', 'r', encoding='utf-8') as archivo:
+            nombres = archivo.readlines()  # Lee todas las líneas del archivo
+        
+        # Eliminar los saltos de línea al final de cada nombre
+        nombres = [nombre.strip() for nombre in nombres]
+        
+        # Elegir un nombre aleatorio de la lista
+        nombre_elegido = random.choice(nombres)
+        
+        return nombre_elegido
+
+    def create_particle(self, lifetime, name): # aqui creo la particula, pide los datos basicos como se llama y cuanto vive
+        # recuerda que siempre aparecen en los bordes, por eso es que si o si una es 0, de lo contrario estaran adentradas en el mapa
+        # puse el random walk para particula, piensas que deberiamos sacarla? digo, para aprovecharla en ocasiones como esta
+        if random.choice([True, False]): # si es true optamos por algun margen de x
+            x = random.choice([0, self.dimension]) # sera el margen de x mas bajo o mas alto, 0 o top
+            y = random.randint(0, self.dimension) # y sera el que sea, igual no saldra de x
+        else: # de lo contrario optamos por algun margen de y
+            x = random.randint(0, self.dimension) # cualquier valor pa x
+            y = random.choice([0, self.dimension]) # el y sera el borde izquierdo (0) o el derecho (top)
+
+        return particle(name, x, y, lifetime) # la mandamos bien peinadita a la particula
+
+    # Método que crea la comida en la simulación, nomas te pide la cantidad
+    # de aumentar los atributos de la comida, creo que sufriremos aqui
+    def create_food(self, quantity):
+        # Calcular el número máximo de posiciones disponibles, para saber cuanto puede haber de comida y no exceder
+        max_food_possible = (self.dimension - 1) * (self.dimension - 1)
+
+        # si la comida se pide negativa o excede el limite, cerramos el programa, me gustaria que se pueda volver a solicitar
+        if quantity < 0:
+            print("Error: La cantidad de comida no puede ser negativa.")
+            exit()  # Detiene el programa si la cantidad es negativa
+        elif quantity > max_food_possible:
+            print(
+                f"Error: La cantidad solicitada ({quantity}) excede el límite máximo de {max_food_possible}."
+            )
+            exit()  # Detiene el programa si la cantidad excede el límite
+
+        global foods # otro caso de programacion asquerosa, revisar
+        foods = [] # arreglo pa todas las comidas que se creen
+
+        # Función que verifica si una posición ya está ocupada
+        # esto se debe de optimizar, pero no se me ocurre como, si se te ocurre algo me dices
+        # digo que se debe de optimizar por que es fuerza bruta, de haber mucha comida tardara revisando la posicion de cada una
+        def is_position_occupied(x, y): # submetodo, va aqui porque es exclusivo de esta funcionalidad
+            for food_item in foods: # por cada comida
+                if food_item.Xaxis == x and food_item.Yaxis == y: # si la comida esta en la posicion que queremos revisar
+                    return True 
+            return False
+
+        # Crear comida
+        for i in range(quantity): # por cada comida que se quiera crear 
+            while True: # es while porque si la posicion esta ocupada, se repite
+                # Generar posición aleatoria
+                Xaxis = random.randint(1, self.dimension - 1)
+                Yaxis = random.randint(1, self.dimension - 1)
+
+                # Verificar si la posición está ocupada
+                if not is_position_occupied(Xaxis, Yaxis): # esto no es recursividad, es otro metodo mira bien
+                    foods.append(food(True, Xaxis, Yaxis)) # mandamos la nueva comida calientita al array de comidas
+                    break  # Salir del ciclo while cuando la posición es válida
+
+            print("Comida en la posición", Xaxis, Yaxis) # imprimimos la posicion de la comida
+
+    # Método que ejecuta la simulación, este es el duro, pero por ahora jala pa uno nomas, cambiar si o si
+    def simulate(self, lifetime, food_quantity): # aqui se ejecuta la simulacion, pide el nombre de la particula, cuanto vive y cuanta comida
+        # enserio debe de cambiarse, esta quemado pa una, hasta pide sus datos, muy limitado
+        sim.create_food(food_quantity) # creamos la comida
+        for i in range(self.cicles): # repetimos la simulacion por el numero de ciclos que se pidio
+            print("Ciclo ", i + 1) # informamos el ciclo actual
+            # llamamos al metodo pa crear particulas
+            # viendolo bien es medio estupido pedir estos datos arriba, nimodo, asi se hizo
+            # son particular diferentes, si todas se llaman igual es porque andamos pobres de codigo
+            self.particle = self.create_particle(lifetime, self.select_name()) # creamos la particula
+
+            # Ejecuta el movimiento complejo de la partícula durante el número de ciclos especificado
+            self.particle.complex_movement()
+
+
+if __name__ == "__main__":
+    sim = ejecutable(cicles=1, particle=None, dimension=5, divisions=2)
+    sim.simulate(8, 5)
