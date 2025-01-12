@@ -8,6 +8,7 @@ class particle:
         self.Yaxis = Yaxis # posicion en y
         self.lifetime = lifetime # tiempo de vida de la particula, mas bien deberian ser los pasos, pero yo no pongo las reglas
         self.originalTime = lifetime # guardamos el tiempo original pa cuando coma, le devolvemos la vida que le quitamos
+        self.recorrido = [[self.Xaxis, self.Yaxis]] # guardamos el recorrido de la particula, este se actualiza en complex_movement
         print( # lo presentamos al mundo cruel
             "Soy "
             + name
@@ -60,19 +61,17 @@ class particle:
                 print(
                     f"Posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}" # en cada paso tambien imprimimos la posicion y la vida restante
                 )
-
-            self.has_ate() # en cada movimiento verificamos si cayo en comidita ica
+            self.recorrido.append([self.Xaxis, self.Yaxis]) # Guardamos el recorrido para mayor facilidad al graficar
 
 
         print(f"La partícula {self.name} ha muerto en la posición ({self.Xaxis}, {self.Yaxis})") # aqui afuera del ciclo sabemos que murio, veamos donde fue
- 
-    # Método que verifica si la partícula ha comido
+
     def has_ate(self):
         for food_item in foods:
             if (
-                food_item.status
-                and food_item.Xaxis == self.Xaxis
-                and food_item.Yaxis == self.Yaxis
+                    food_item.status
+                    and food_item.Xaxis == self.Xaxis
+                    and food_item.Yaxis == self.Yaxis
             ):
                 food_item.disappear()
                 self.lifetime += self.originalTime
@@ -97,9 +96,9 @@ class food:
 
 # Clase que ejecuta la simulación, le iba poner universo pero me parecio muy pretencioso
 class ejecutable:
-    def __init__(self, cicles, particle, dimension, divisions):
+    def __init__(self, cicles, dimension, divisions):
         self.cicles = cicles # ciclos pa la simulacion
-        self.particle = particle # la partícula, actualmente solo es una, pero podria ser un array de particulas
+        self.particles = [] # la partícula, actualmente solo es una, pero podria ser un array de particulas
         self.dimension = dimension # dimension del universo, solo recibimos una porque va a ser cuadrado a menos que esto se cambie, lo que nos joderia mucho, ojala quen o pase
         print( #info util
             "La simulacion se ejecutara por",
@@ -109,7 +108,7 @@ class ejecutable:
             "x",
             dimension,
         )
-
+        self.foods = [] # arreglo pa todas las comidas que se creen
         global global_dimension # programacion sucia cochina puerca, pero asi toca, si encuentras una alternativa que no perjudique mi curriculum me dices
         global_dimension = self.dimension # la copio pa mandarla a la partícula, es otra pa no ser mas puercos
 
@@ -157,14 +156,13 @@ class ejecutable:
             )
             exit()  # Detiene el programa si la cantidad excede el límite
 
-        global foods # otro caso de programacion asquerosa, revisar
-        foods = [] # arreglo pa todas las comidas que se creen
-
         # Función que verifica si una posición ya está ocupada
         # esto se debe de optimizar, pero no se me ocurre como, si se te ocurre algo me dices
         # digo que se debe de optimizar por que es fuerza bruta, de haber mucha comida tardara revisando la posicion de cada una
+        global foods
+        foods = []
         def is_position_occupied(x, y): # submetodo, va aqui porque es exclusivo de esta funcionalidad
-            for food_item in foods: # por cada comida
+            for food_item in self.foods: # por cada comida
                 if food_item.Xaxis == x and food_item.Yaxis == y: # si la comida esta en la posicion que queremos revisar
                     return True 
             return False
@@ -178,7 +176,8 @@ class ejecutable:
 
                 # Verificar si la posición está ocupada
                 if not is_position_occupied(Xaxis, Yaxis): # esto no es recursividad, es otro metodo mira bien
-                    foods.append(food(True, Xaxis, Yaxis)) # mandamos la nueva comida calientita al array de comidas
+                    self.foods.append(food(True, Xaxis, Yaxis)) # mandamos la nueva comida calientita al array de comidas
+                    foods.append(food(True, Xaxis, Yaxis)) # y a la global, por si se necesita en otro lado
                     break  # Salir del ciclo while cuando la posición es válida
 
             print("Comida en la posición", Xaxis, Yaxis) # imprimimos la posicion de la comida
@@ -186,18 +185,20 @@ class ejecutable:
     # Método que ejecuta la simulación, este es el duro, pero por ahora jala pa uno nomas, cambiar si o si
     def simulate(self, lifetime, food_quantity): # aqui se ejecuta la simulacion, pide el nombre de la particula, cuanto vive y cuanta comida
         # enserio debe de cambiarse, esta quemado pa una, hasta pide sus datos, muy limitado
-        sim.create_food(food_quantity) # creamos la comida
+        #sim.create_food(food_quantity) # Antes estaba asi, pero no se por que en un punto me dio error, en fin, se reescribio la linea
+        self.create_food(food_quantity) # creamos la comida
         for i in range(self.cicles): # repetimos la simulacion por el numero de ciclos que se pidio
             print("Ciclo ", i + 1) # informamos el ciclo actual
             # llamamos al metodo pa crear particulas
             # viendolo bien es medio estupido pedir estos datos arriba, nimodo, asi se hizo
             # son particular diferentes, si todas se llaman igual es porque andamos pobres de codigo
-            self.particle = self.create_particle(lifetime, self.select_name()) # creamos la particula
+            aux_particle = self.create_particle(lifetime, self.select_name()) # Creamos una particula
+            self.particles.append(aux_particle) # Agregamos la particula al arreglo de particulas
 
-            # Ejecuta el movimiento complejo de la partícula durante el número de ciclos especificado
-            self.particle.complex_movement()
+        for i in range(len(self.particles)):
+            self.particles[i].complex_movement() # Por cada particula, ejecutamos complex_movement, asi se genera el recorrido de cada una
 
 
 if __name__ == "__main__":
-    sim = ejecutable(cicles=1, particle=None, dimension=5, divisions=2)
+    sim = ejecutable(cicles=1,dimension=5, divisions=2)
     sim.simulate(8, 5)
