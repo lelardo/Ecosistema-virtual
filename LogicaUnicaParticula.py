@@ -8,18 +8,17 @@ class particle:
         self.Yaxis = Yaxis # posicion en y
         self.lifetime = lifetime # tiempo de vida de la particula, mas bien deberian ser los pasos, pero yo no pongo las reglas
         self.originalTime = lifetime # guardamos el tiempo original pa cuando coma, le devolvemos la vida que le quitamos
-    
-    def presentation(self): # metodo para presentarse, esto para imprimir su nacimiento
-            print( # lo presentamos al mundo cruel
+        print( # lo presentamos al mundo cruel
             "Soy "
-            + self.name
+            + name
             + " y nací en la posición "
-            + str(self.Xaxis)
+            + str(Xaxis)
             + ", "
-            + str(self.Yaxis)
+            + str(Yaxis)
             + ", mi vida es de ",
-            self.lifetime,
+            lifetime,
         )
+    
 
     # Método que simula un movimiento aleatorio simple
     # esto es requisito y define los aleatorios
@@ -100,11 +99,10 @@ class food:
 
 # Clase que ejecuta la simulación, le iba poner universo pero me parecio muy pretencioso
 class ejecutable:
-    def __init__(self, cicles, cant_particles, dimension):
+    def __init__(self, cicles, particle, dimension):
         self.cicles = cicles # ciclos pa la simulacion
-        self.cant_particles = cant_particles # la partícula, actualmente solo es una, pero podria ser un array de particulas
+        self.particle = particle # la partícula, actualmente solo es una, pero podria ser un array de particulas
         self.dimension = dimension # dimension del universo, solo recibimos una porque va a ser cuadrado a menos que esto se cambie, lo que nos joderia mucho, ojala quen o pase
-        self.particles = [] # arreglo de particulas
         print( #info util
             "La simulacion se ejecutara por",
             cicles,
@@ -142,7 +140,7 @@ class ejecutable:
         else: # de lo contrario optamos por algun margen de y
             x = random.randint(0, self.dimension-1) # cualquier valor pa x
             y = random.choice([0, self.dimension-1]) # el y sera el borde izquierdo (0) o el derecho (top)
-        
+
         return particle(name, x, y, lifetime) # la mandamos bien peinadita a la particula
 
     # Método que crea la comida en la simulación, nomas te pide la cantidad
@@ -189,22 +187,19 @@ class ejecutable:
 
     # Método que ejecuta la simulación, este es el duro, pero por ahora jala pa uno nomas, cambiar si o si
     def simulate(self, lifetime, food_quantity): # aqui se ejecuta la simulacion, pide el nombre de la particula, cuanto vive y cuanta comida
-        self.create_food(food_quantity) # creamos la comida
+        # enserio debe de cambiarse, esta quemado pa una, hasta pide sus datos, muy limitado
+        sim.create_food(food_quantity) # creamos la comida
         print("----------------------------------------------")
         for i in range(self.cicles): # repetimos la simulacion por el numero de ciclos que se pidio
             print("Ciclo ", i + 1) # informamos el ciclo actual
             print("----------------------------------------------")
-            for i in range(self.cant_particles): # por cada particula que se quiera crear
-                self.particles.append(self.create_particle(lifetime, self.select_name())) # creamos la particula y la agregamos
+            # llamamos al metodo pa crear particulas
+            self.particle = self.create_particle(lifetime, self.select_name()) # creamos la particula
+            # Ejecuta el movimiento complejo de la partícula durante el número de ciclos especificado
+            self.particle.complex_movement()
             print("----------------------------------------------")
-            for i in range(self.cant_particles): # por cada particula
-                self.particles[i].presentation() # presentamos a la particula
-                # Ejecuta el movimiento complejo de la partícula durante el número de ciclos especificado
-                self.particles[i].complex_movement()
-            print("----------------------------------------------")
-            self.particles = [] # limpiamos el array de particulas para el siguiente ciclo
 
 
 if __name__ == "__main__":
-    sim = ejecutable(cicles=4, cant_particles=1, dimension=5)
+    sim = ejecutable(cicles=2, particle=None, dimension=5)
     sim.simulate(8, 5)

@@ -1,12 +1,11 @@
 import tkinter as tk
-from main import ejecutable
+from main import *
 
 pantalla = tk.Tk()
 pantalla.title("Simulacion Ecosistema")
-pantalla.geometry("800x800")
 pantalla.configure(bg="white")
-width = 800
-height = 800
+width = 1280
+height = 720
 lienzo = tk.Canvas(pantalla, width=width, height=height)
 lienzo.pack()
 
@@ -65,6 +64,7 @@ def main():
     cicles = 3 # Puedes modificar para ingresar manualmente
     dimension = width // 20 #Dimension para dibujar particulas y comida
     simu = ejecutable(cicles, dimension, 20)
+    global pantalla
 
     num_comidas = 5  # Puedes modificar para ingresar manualmente
     simu.simulate(5, num_comidas) #Esto es para poder generar comidas, y particulas en ejecutable
