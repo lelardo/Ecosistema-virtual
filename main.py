@@ -1,5 +1,5 @@
 import random
-
+import copy
 # Clase que representa una partícula
 class particle:
     def __init__(self, name, Xaxis, Yaxis, lifetime):
@@ -8,7 +8,7 @@ class particle:
         self.Yaxis = Yaxis # posicion en y
         self.lifetime = lifetime # tiempo de vida de la particula, mas bien deberian ser los pasos, pero yo no pongo las reglas
         self.originalTime = lifetime # guardamos el tiempo original pa cuando coma, le devolvemos la vida que le quitamos
-        self.recorrido = [] # array pa almacenar los puntos donde pasa
+        self.recorrido = [[Xaxis, Yaxis]] # array pa almacenar los puntos donde pasa
     def presentation(self): # metodo para presentarse, esto para imprimir su nacimiento
             print( # lo presentamos al mundo cruel
             "Soy "
@@ -62,7 +62,7 @@ class particle:
                 print(
                     f"Posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}" # en cada paso tambien imprimimos la posicion y la vida restante
                 )
-
+            self.recorrido.append((self.Xaxis, self.Yaxis)) # guardamos la posicion en la que estuvo
             self.has_ate() # en cada movimiento verificamos si cayo en comidita ica
 
 
@@ -106,6 +106,7 @@ class ejecutable:
         self.cant_particles = cant_particles # la partícula, actualmente solo es una, pero podria ser un array de particulas
         self.dimension = dimension # dimension del universo, solo recibimos una porque va a ser cuadrado a menos que esto se cambie, lo que nos joderia mucho, ojala quen o pase
         self.particles = [] # arreglo de particulas
+        self.foods_copy = [] # Arreglo auxiliar para poder llevar las comidas a una interfaz grafica
         print( #info util
             "La simulacion se ejecutara por",
             cicles,
@@ -192,19 +193,20 @@ class ejecutable:
     # Método que ejecuta la simulación, este es el duro, pero por ahora jala pa uno nomas, cambiar si o si
     def simulate(self, lifetime, food_quantity): # aqui se ejecuta la simulacion, pide el nombre de la particula, cuanto vive y cuanta comida
         self.create_food(food_quantity) # creamos la comida
+        self.foods_copy = copy.deepcopy(self.foods) # copiamos la comida para la particula
         print("----------------------------------------------")
         for i in range(self.cicles): # repetimos la simulacion por el numero de ciclos que se pidio
             print("Ciclo ", i + 1) # informamos el ciclo actual
             print("----------------------------------------------")
             for i in range(self.cant_particles): # por cada particula que se quiera crear
-                self.particles.append(self.create_particle(lifetime, self.select_name())) # creamos la particula y la agregamos
+                aux = self.create_particle(lifetime, self.select_name()) # creamos la particula y la agregamos
             print("----------------------------------------------")
             for i in range(self.cant_particles): # por cada particula
-                self.particles[i].presentation() # presentamos a la particula
+                aux.presentation() # presentamos a la particula
                 # Ejecuta el movimiento complejo de la partícula durante el número de ciclos especificado
-                self.particles[i].complex_movement()
+                aux.complex_movement()
             print("----------------------------------------------")
-            self.particles = [] # limpiamos el array de particulas para el siguiente ciclo
+            self.particles.append(aux) # limpiamos el array de particulas para el siguiente ciclo
 
 
 if __name__ == "__main__":

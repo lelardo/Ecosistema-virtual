@@ -10,70 +10,118 @@ lienzo = tk.Canvas(pantalla, width=width, height=height)
 lienzo.pack()
 
 
-def dibujar_cuadrilla(dimension):
-    for i in range(0, width, dimension):
-        lienzo.create_line(i, 0, i, height, fill="black")
-        lienzo.create_line(0, i, width, i, fill="black")
+def dibujar_cuadrilla(num_cuadros, dimension, start_x=50, start_y=50):
+    """
+    Dibuja una cuadrícula con un número específico de cuadros dentro de un área delimitada en el lienzo.
+    :param num_cuadros: Número total de cuadros en una fila o columna.
+    :param dimension: Tamaño de cada cuadro (en píxeles).
+    :param start_x: Coordenada inicial en el eje X.
+    :param start_y: Coordenada inicial en el eje Y.
+    """
+    end_x = start_x + num_cuadros * dimension
+    end_y = start_y + num_cuadros * dimension
 
-#Metodo para dibujar la comida, con un reescalado para poder notar bien la separacion en la pantalla
-def dibujar_comida(comidas):
-    for comida in comidas:
-        if comida.status:
-            lienzo.create_oval(
-                comida.Xaxis * 20,
-                comida.Yaxis * 20,
-                comida.Xaxis * 20 + 10,
-                comida.Yaxis * 20 + 10,
-                fill="red",
-                outline="",
-            )
+    # Dibujar líneas verticales
+    for i in range(start_x, end_x + 1, dimension):
+        lienzo.create_line(i, start_y, i, end_y, fill="black")
 
-
-def dibujar_particula(particula):
-    x, y = particula.Xaxis, particula.Yaxis
-    return lienzo.create_oval(x * 20, y * 20, x * 20 + 10, y * 20 + 10, fill="blue")
+    # Dibujar líneas horizontales
+    for j in range(start_y, end_y + 1, dimension):
+        lienzo.create_line(start_x, j, end_x, j, fill="black")
 
 
-def simulacion(particulas, comidas, dimension):
+# Metodo para dibujar la comida, con un reescalado para poder notar bien la separacion en la pantalla
+def dibujar_comida(comida, dimension, start_x=50, start_y=50):
+    """
+    Dibuja puntos de comida dentro de la cuadrícula ajustada, manteniendo su tamaño original.
+    """
+    if comida.status:
+        x = start_x + comida.Xaxis * dimension
+        y = start_y + comida.Yaxis * dimension
+        return lienzo.create_oval(
+            x - 5,
+            y - 5,
+            x + 5,  # Mantener tamaño original
+            y + 5,  # Mantener tamaño original
+            fill="red",
+            outline=""
+        )
+
+
+def dibujar_particula(particula, dimension, start_x=50, start_y=50):
+    """
+    Dibuja una partícula en su posición dentro de la cuadrícula, manteniendo su tamaño original.
+    """
+    x = start_x + particula.Xaxis * dimension
+    y = start_y + particula.Yaxis * dimension
+    return lienzo.create_oval(
+        x - 5,
+        y - 5,
+        x + 5,  # Mantener tamaño original
+        y + 5,  # Mantener tamaño original
+        fill="blue"
+    )
+
+
+def simulacion(particulas, comidas, dimension_dibujo, num_cuadros):
     # Limpiar lienzo antes de iniciar un nuevo ciclo
     lienzo.delete("all")  # Eliminar todos los elementos del lienzo (partículas y comida)
 
     # Dibujar comida
-    dibujar_comida(comidas)
+    comida_ids = [] # Array para guardar los ids de las comidas, y en caso de ser comidas, poder eliminarlos en la parte visual
+    for comida in comidas:
+        comida_ids.append(dibujar_comida(comida, dimension_dibujo)) # Por cada comida se dibuja, y lo guardamos para mas tarde borrarlo
+    dibujar_cuadrilla(num_cuadros, dimension_dibujo)
 
     # Crear y dibujar la nueva partícula para el ciclo actual
     for particula in particulas:
-        print("Ciclo 1")
-        particula_id = dibujar_particula(particula)
+        particula_id = dibujar_particula(particula, dimension_dibujo)
         # Comienza la animación de la partícula
-        actualizar_particula(particula, comidas, particula_id)
+        actualizar_particula(particula, comidas, particula_id, dimension_dibujo, comida_ids)
         # Termina la función cuando una partícula comienza su animación
         lienzo.delete(particula_id)
 
 
-def actualizar_particula(particula, comidas, particula_id):
+def actualizar_particula(particula, comidas, particula_id, dimension, comida_ids, start_x=50, start_y=50):
+    """
+    Actualiza la posición de una partícula durante su recorrido.
+    """
     for i, camino in enumerate(particula.recorrido):
         x1, y1 = camino
         x2, y2 = particula.recorrido[i + 1] if i + 1 < len(particula.recorrido) else camino
-        lienzo.coords(particula_id, x1 * 20, y1 * 20, x1 * 20 + 10, y1 * 20 + 10)
+
+        # Ajustar posiciones según la cuadrícula
+        x1_px = start_x + x1 * dimension
+        y1_px = start_y + y1 * dimension
+        x2_px = start_x + x2 * dimension
+        y2_px = start_y + y2 * dimension
+
+        # Verificar si la partícula se encuentra en una posición con comida
+        for j in range(len(comidas) - 1, -1, -1):  # Iterar en orden inverso
+            if (x1, y1) == (comidas[j].Xaxis, comidas[j].Yaxis):
+                print('Se elimino')
+                lienzo.delete(comida_ids[j])  # Eliminar comida del lienzo
+                comida_ids.pop(j)  # Eliminar de los IDs
+                comidas.pop(j)  # Eliminar de la lista de comidas
+
+        # Actualizar las coordenadas de la partícula
+        lienzo.coords(particula_id, x1_px - 5, y1_px - 5, x1_px + 5, y1_px + 5)
+
         lienzo.update()
-        lienzo.after(1000)
+        lienzo.after(500)
 
 
 def main():
-    cicles = 3 # Puedes modificar para ingresar manualmente
-    dimension = width // 20 #Dimension para dibujar particulas y comida
-    simu = ejecutable(cicles, dimension, 20)
+    cicles = 3  # Puedes modificar para ingresar manualmente
+    dimension_dibujo = width // 20  # Dimension para dibujar particulas y comida
+    num_cuadros = 5 # El numero de puntos que se generere sera igual al valor en num_cuadros + 1
+    simu = ejecutable(cicles, cicles, num_cuadros)
     global pantalla
-    simu.fo
-
-
-    num_comidas = 5  # Puedes modificar para ingresar manualmente
-    simu.simulate(5, num_comidas) #Esto es para poder generar comidas, y particulas en ejecutable
-    comidas = simu.foods #Nuevo atributo de ejecutable para poder obtener las comidas y dibujarlas despues
-    particulas = simu.particles # Atributo modificado de ejecutable, ahora tiene una lista de particulas
-
-    simulacion(particulas, comidas, dimension)
+    num_comidas = 3  # Puedes modificar para ingresar manualmente
+    simu.simulate(5, num_comidas)  # Esto es para poder generar comidas, y particulas en ejecutable
+    comidas = simu.foods_copy # Obtenemos el array de las comidas para poder graficar
+    particulas = simu.particles  # Atributo modificado de ejecutable, ahora tiene una lista de particulas
+    simulacion(particulas, comidas, dimension_dibujo, num_cuadros)
     pantalla.mainloop()
 
 
