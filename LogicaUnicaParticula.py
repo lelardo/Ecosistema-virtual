@@ -8,6 +8,7 @@ class particle:
         self.Yaxis = Yaxis # posicion en y
         self.lifetime = lifetime # tiempo de vida de la particula, mas bien deberian ser los pasos, pero yo no pongo las reglas
         self.originalTime = lifetime # guardamos el tiempo original pa cuando coma, le devolvemos la vida que le quitamos
+        self.recorrido = [] # array pa almacenar los puntos donde pasa
         print( # lo presentamos al mundo cruel
             "Soy "
             + name
@@ -69,7 +70,7 @@ class particle:
  
     # Método que verifica si la partícula ha comido
     def has_ate(self):
-        for food_item in foods:
+        for food_item in global_foods:
             if (
                 food_item.status
                 and food_item.Xaxis == self.Xaxis
@@ -80,7 +81,7 @@ class particle:
                 print(
                     f"{self.name} comió en la posición {self.Xaxis}, {self.Yaxis}, su vida es ahora {self.lifetime}"
                 )
-                for food_item in foods:
+                for food_item in global_foods:
                     print("Comida ", food_item.Xaxis, food_item.Yaxis, food_item.status)
 
 # Clase que representa la comida
@@ -100,6 +101,7 @@ class food:
 # Clase que ejecuta la simulación, le iba poner universo pero me parecio muy pretencioso
 class ejecutable:
     def __init__(self, cicles, particle, dimension):
+        self.foods = [] # array de comidas
         self.cicles = cicles # ciclos pa la simulacion
         self.particle = particle # la partícula, actualmente solo es una, pero podria ser un array de particulas
         self.dimension = dimension # dimension del universo, solo recibimos una porque va a ser cuadrado a menos que esto se cambie, lo que nos joderia mucho, ojala quen o pase
@@ -114,6 +116,9 @@ class ejecutable:
 
         global global_dimension # programacion sucia cochina puerca, pero asi toca, si encuentras una alternativa que no perjudique mi curriculum me dices
         global_dimension = self.dimension # la copio pa mandarla a la partícula, es otra pa no ser mas puercos
+
+        global global_foods # otro caso de programacion asquerosa, revisar
+        global_foods = self.foods # otra copia que se manda a particula
 
     # Método que elige un nombre aleatorio de una lista, me gusta que las particulas tengan identidad
     # creo que es un poco pesado de ejecutar, posible descarte
@@ -159,14 +164,11 @@ class ejecutable:
             )
             exit()  # Detiene el programa si la cantidad excede el límite
 
-        global foods # otro caso de programacion asquerosa, revisar
-        foods = [] # arreglo pa todas las comidas que se creen
-
         # Función que verifica si una posición ya está ocupada
         # esto se debe de optimizar, pero no se me ocurre como, si se te ocurre algo me dices
         # digo que se debe de optimizar por que es fuerza bruta, de haber mucha comida tardara revisando la posicion de cada una
         def is_position_occupied(x, y): # submetodo, va aqui porque es exclusivo de esta funcionalidad
-            for food_item in foods: # por cada comida
+            for food_item in self.foods: # por cada comida
                 if food_item.Xaxis == x and food_item.Yaxis == y: # si la comida esta en la posicion que queremos revisar
                     return True 
             return False
@@ -180,7 +182,7 @@ class ejecutable:
 
                 # Verificar si la posición está ocupada
                 if not is_position_occupied(Xaxis, Yaxis): # esto no es recursividad, es otro metodo mira bien
-                    foods.append(food(True, Xaxis, Yaxis)) # mandamos la nueva comida calientita al array de comidas
+                    self.foods.append(food(True, Xaxis, Yaxis)) # mandamos la nueva comida calientita al array de comidas
                     break  # Salir del ciclo while cuando la posición es válida
 
             print("Comida en la posición", Xaxis, Yaxis) # imprimimos la posicion de la comida

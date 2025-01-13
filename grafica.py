@@ -65,6 +65,8 @@ def main():
     dimension = width // 20 #Dimension para dibujar particulas y comida
     simu = ejecutable(cicles, dimension, 20)
     global pantalla
+    simu.fo
+
 
     num_comidas = 5  # Puedes modificar para ingresar manualmente
     simu.simulate(5, num_comidas) #Esto es para poder generar comidas, y particulas en ejecutable
