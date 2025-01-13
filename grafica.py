@@ -142,7 +142,7 @@ def actualizar_particula(particula, comidas, particula_id, dimension, comida_ids
 def main():
     # valores configurables
 
-    cicles = 3  # Puedes modificar para ingresar manualmente
+    cicles = 5  # Puedes modificar para ingresar manualmente
     num_puntos = 10 # El numero de puntos por lado de la cuadricula
     num_comidas = 3  # Puedes modificar para ingresar manualmente
     cant_pasos = 15  # Puedes modificar para ingresar

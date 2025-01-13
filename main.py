@@ -201,10 +201,10 @@ class ejecutable:
             for i in range(self.cant_particles): # por cada particula que se quiera crear
                 aux = self.create_particle(lifetime, self.select_name()) # creamos la particula y la agregamos
             print("----------------------------------------------")
-            for i in range(self.cant_particles): # por cada particula
-                aux.presentation() # presentamos a la particula
-                # Ejecuta el movimiento complejo de la partícula durante el número de ciclos especificado
-                aux.complex_movement()
+
+            aux.presentation() # presentamos a la particula
+            # Ejecuta el movimiento complejo de la partícula durante el número de ciclos especificado
+            aux.complex_movement()
             print("----------------------------------------------")
             self.particles.append(aux) # limpiamos el array de particulas para el siguiente ciclo
 
