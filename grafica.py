@@ -43,7 +43,7 @@ def dibujar_comida(comida, dimension, start_x=50, start_y=50):
             y - 5,
             x + 5,  # Mantener tamaño original
             y + 5,  # Mantener tamaño original
-            fill="red",
+            fill="green",
             outline=""
         )
 
@@ -74,7 +74,7 @@ def dibujar_particula_final(particula, dimension, start_x=50, start_y=50):
         y - 5,
         x + 5,  # Mantener tamaño original
         y + 5,  # Mantener tamaño original
-        fill="green"
+        fill="red"
     )
 
 def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
@@ -140,18 +140,26 @@ def actualizar_particula(particula, comidas, particula_id, dimension, comida_ids
 
 
 def main():
-    cicles = 3  # Puedes modificar para ingresar manualmente
-    num_puntos = 5 # El numero de puntos que se generara
-    dimension_dibujo = int(height / num_puntos) - 15  # Dimension para dibujar particulas y comida
-    simu = ejecutable(cicles, cicles, num_puntos)
-    global pantalla
-    num_comidas = 3  # Puedes modificar para ingresar manualmente
-    simu.simulate(5, num_comidas)  # Esto es para poder generar comidas, y particulas en ejecutable
-    comidas = simu.foods_copy # Obtenemos el array de las comidas para poder graficar
-    particulas = simu.particles  # Atributo modificado de ejecutable, ahora tiene una lista de particulas
-    simulacion(particulas, comidas, dimension_dibujo, num_puntos)
-    pantalla.mainloop()
+    # valores configurables
 
+    cicles = 3  # Puedes modificar para ingresar manualmente
+    num_puntos = 10 # El numero de puntos por lado de la cuadricula
+    num_comidas = 3  # Puedes modificar para ingresar manualmente
+    cant_pasos = 15  # Puedes modificar para ingresar
+
+    #elementos de ejecucion, NO TOCARRRR
+    if cicles > 0 and num_puntos > 0 and num_comidas > 0 and cant_pasos > 0:
+        dimension_dibujo = int(height / num_puntos) -10 # Dimension para dibujar particulas y comida
+        simu = ejecutable(cicles, cicles, num_puntos)
+        global pantalla
+        simu.simulate(cant_pasos, num_comidas)  # Esto es para poder generar comidas, y particulas en ejecutable
+        comidas = simu.foods_copy # Obtenemos el array de las comidas para poder graficar
+        particulas = simu.particles  # Atributo modificado de ejecutable, ahora tiene una lista de particulas
+        simulacion(particulas, comidas, dimension_dibujo, num_puntos)
+        pantalla.mainloop()
+    else:
+        print("Error: Todos los valores deben ser mayores que 0.")
+        pantalla.destroy()
 
 if __name__ == "__main__":
     main()
