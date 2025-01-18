@@ -140,16 +140,16 @@ def actualizar_particula(particula, comidas, particula_id, dimension, comida_ids
 
 
 def main():
-    # valores configurables
+    # valores configurables, SOLO ENTEROS
 
-    cicles = 5  # Puedes modificar para ingresar manualmente
+    cicles = 1  # Puedes modificar para ingresar manualmente
     num_puntos = 10 # El numero de puntos por lado de la cuadricula
     num_comidas = 3  # Puedes modificar para ingresar manualmente
     cant_pasos = 15  # Puedes modificar para ingresar
 
     #elementos de ejecucion, NO TOCARRRR
     if cicles > 0 and num_puntos > 0 and num_comidas > 0 and cant_pasos > 0:
-        dimension_dibujo = int(height / num_puntos) -10 # Dimension para dibujar particulas y comida
+        dimension_dibujo = int(height / num_puntos)-1 # Dimension para dibujar particulas y comida
         simu = ejecutable(cicles, cicles, num_puntos)
         global pantalla
         simu.simulate(cant_pasos, num_comidas)  # Esto es para poder generar comidas, y particulas en ejecutable
