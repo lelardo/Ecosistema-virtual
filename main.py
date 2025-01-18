@@ -92,44 +92,37 @@ class particle:
         # metodo no iterativo para ejecutar un solo movimiento de la particula
         # no revisa si comio, ni es responsable de frenar si ha muerto, eso depende de un metodo externo super_simmulation
 
-        if self.lifetime > 0:  # mientras la vida no sea 0 o menor demole
-            if (
-                self.lifetime
-                <= 0  # una verificacion extra para cortarlo en caso de vainas
-            ):
-                print(f"La partícula {self.name} ya ha muerto, terminando el ciclo.")
+        aux_Xaxis = self.Xaxis # valores auxiliares para regresar si se sale de la dimension
+        aux_Yaxis = self.Yaxis # lo mismo de arriba
 
-
-            aux_Xaxis = self.Xaxis # valores auxiliares para regresar si se sale de la dimension
-            aux_Yaxis = self.Yaxis # lo mismo de arriba
-
-            if (self.simple_random_walk()):  # nos aventamos el aleatorio pa ver si x o y, True sera x
-                if (self.simple_random_walk()):  # ahora en x nos aventamos otro pa ver si palante o patras
-                    self.Xaxis += 1  # palante
-                else:
-                    self.Xaxis -= 1  # patras
+        if (self.simple_random_walk()):  # nos aventamos el aleatorio pa ver si x o y, True sera x
+            if (self.simple_random_walk()):  # ahora en x nos aventamos otro pa ver si palante o patras
+                self.Xaxis += 1  # palante
             else:
-                if (self.simple_random_walk()):  # ahora en y nos aventamos otro pa ver si pariba o pabajo
-                    self.Yaxis += 1  # pariba
-                else:
-                    self.Yaxis -= 1  # pabajo
-
-            if (
-                self.Xaxis < 0
-                or self.Xaxis >= global_dimension
-                or self.Yaxis < 0
-                or self.Yaxis >= global_dimension
-            ):  # si se sale de la dimension
-                self.Yaxis = aux_Yaxis  # volvemos a la posicion anterior
-                self.Xaxis = aux_Xaxis
-                self.simple_movement()  # descartamos el movimiento e intentamos nuevamente
-            else:
-                print(
-                    f"➡️{"  "}{self.name} , posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}"  # en cada paso tambien imprimimos la posicion y la vida restante
-                )
-            self.recorrido.append((self.Xaxis, self.Yaxis))  # guardamos la posicion en la que estuvo
-            #self.has_ate()  # en cada movimiento verificamos si cayo en comidita ica
+                self.Xaxis -= 1  # patras
         else:
+            if (self.simple_random_walk()):  # ahora en y nos aventamos otro pa ver si pariba o pabajo
+                self.Yaxis += 1  # pariba
+            else:
+                self.Yaxis -= 1  # pabajo
+
+        if (
+            self.Xaxis < 0
+            or self.Xaxis >= global_dimension
+            or self.Yaxis < 0
+            or self.Yaxis >= global_dimension
+            ):  # si se sale de la dimension
+            self.Yaxis = aux_Yaxis  # volvemos a la posicion anterior
+            self.Xaxis = aux_Xaxis
+            self.simple_movement()  # descartamos el movimiento e intentamos nuevamente
+        else:
+            print(
+                f"➡️{"  "}{self.name} , posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}"  # en cada paso tambien imprimimos la posicion y la vida restante
+            )
+        self.recorrido.append((self.Xaxis, self.Yaxis))  # guardamos la posicion en la que estuvo
+        self.has_ate()  # en cada movimiento verificamos si cayo en comidita ica
+
+        if self.lifetime == 0:  # mientras la vida no sea 0 o menor demole
             print(
                 f"⛔ La partícula {self.name} ha parado en la posición ({self.Xaxis}, {self.Yaxis})"
             )  # si esta aqui es porque no tiene mas vidas
@@ -144,12 +137,15 @@ class particle:
                 and food_item.Xaxis == self.Xaxis
                 and food_item.Yaxis == self.Yaxis
             ):
-                food_item.disappear()
+                #food_item.disappear()
                 #self.lifetime += self.originalTime #reincio de pasos desactivado por ahora
                 self.suvive_status = True  # si come aguanta al siguiente ciclo
-                print(
-                    f"{self.name} comió en la posición {self.Xaxis}, {self.Yaxis}, su vida es ahora {self.lifetime}"
-                )
+
+                #print(
+                #    f"{self.name} comió en la posición {self.Xaxis}, {self.Yaxis}, su vida es ahora {self.lifetime}"
+                #)
+
+                #ver el estado de las comidas
                 #for food_item in global_foods:
                 #    print("Comida ", food_item.Xaxis, food_item.Yaxis, food_item.status)
 
@@ -177,8 +173,6 @@ class ejecutable:
         self.cant_particles = cant_particles  # la partícula, actualmente solo es una, pero podria ser un array de particulas
         self.dimension = dimension  # dimension del universo, solo recibimos una porque va a ser cuadrado a menos que esto se cambie, lo que nos joderia mucho, ojala quen o pase
         self.particles = []  # arreglo de particulas
-        self.food_matrix = [[None for _ in range(dimension)] for _ in range(dimension)]  # matriz de comidas
-        self.map_matrix = [[None for _ in range(dimension)] for _ in range(dimension)]   # matriz que representa el mapa y las particulas
         self.foods_copy = (
             []
         )  # Arreglo auxiliar para poder llevar las comidas a una interfaz grafica
@@ -246,7 +240,7 @@ class ejecutable:
             exit()  # Detiene el programa si la cantidad es negativa
         elif quantity > max_food_possible:
             print(
-                f"Error: La cantidad solicitada ({quantity}) excede el límite máximo de {max_food_possible}."
+                f"Error: La cantidad de comida solicitada ({quantity}) excede el límite máximo de {max_food_possible}."
             )
             exit()  # Detiene el programa si la cantidad excede el límite
 
@@ -282,6 +276,7 @@ class ejecutable:
             print(
                 "🍎 Comida en la posición", Xaxis, Yaxis
             )  # imprimimos la posicion de la comida
+        print("----------------------------------------------")
 
     # Método que ejecuta la simulación, este es el duro, pero por ahora jala pa uno nomas, cambiar si o si
     def simulate(
@@ -318,16 +313,29 @@ class ejecutable:
             for j in range(len(self.particles)):
                 if (self.foods[i].Xaxis == self.particles[j].Xaxis
                     and self.foods[i].Yaxis == self.particles[j].Yaxis):
-                    self.particles[j].suvive_status = True
                     someone_ate = True
                     print("🍽  La partícula ", self.particles[j].name, " ha comido en la posición ", self.foods[i].Xaxis, ", ", self.foods[i].Yaxis)
+
             if someone_ate:
                     self.foods[i].disappear()
                     someone_ate = False
+
+    def restore_health(self):
+        for i in range(len(self.particles)):
+            self.particles[i].lifetime = self.particles[i].originalTime
+            self.particles[i].suvive_status = False
+    
+    def depurate_particles(self):
+        for i in range(len(self.particles) -1, -1, -1):
+            print("🔍 Revisando si la partícula ", self.particles[i].name, " con estado ", self.particles[i].suvive_status,"")
+            if self.particles[i].suvive_status == False:
+                self.particles.pop(i)
+                self.cant_particles -= 1
                 
 
     def super_simulation(self, lifetime, food_quantity):
         self.create_food(food_quantity)
+
         for i in range(self.cant_particles):
             self.particles.append(self.create_particle(lifetime, self.select_name(), i))
             self.particles[i].presentation()
@@ -336,11 +344,19 @@ class ejecutable:
         for i in range(self.cicles):  # repetimos la simulacion por el numero de ciclos que se pidio
             print("🔄 Ciclo ", i + 1)  # informamos el ciclo actual
             print("----------------------------------------------")
-            
+
+            if self.cant_particles == 0:
+                print("🚫 No hay partículas en el ciclo ", i + 1)
+                exit()
+
+            for i in range(self.cant_particles):
+                self.particles[i].presentation()
+                print("----------------------------------------------")
+
             for _ in range(lifetime):
                 for i in range(self.cant_particles):
-                    self.particles[i].lifetime -= 1
                     self.particles[i].simple_movement()
+                    self.particles[i].lifetime -= 1
                 self.check_ate()
                 print("----------------------------------------------")
             for _ in range(self.cant_particles):
@@ -350,9 +366,11 @@ class ejecutable:
                     print("💀 La partícula ", self.particles[_].name, " ha muerto")
             print("----------------------------------------------")
 
+            self.depurate_particles()
+            self.restore_health()
 
-
+            
 
 if __name__ == "__main__":
-    sim = ejecutable(cicles=1, cant_particles=2, dimension=2)
-    sim.super_simulation(3, 1)
+    sim = ejecutable(cicles=2, cant_particles=3, dimension=5)
+    sim.super_simulation(3, 5)
