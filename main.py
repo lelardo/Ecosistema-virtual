@@ -117,7 +117,7 @@ class particle:
             self.simple_movement()  # descartamos el movimiento e intentamos nuevamente
         else:
             print(
-                f"➡️{"  "}{self.name} , posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}"  # en cada paso tambien imprimimos la posicion y la vida restante
+                f"➡️{'  '}{self.name} , posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}"  # en cada paso tambien imprimimos la posicion y la vida restante
             )
         self.recorrido.append((self.Xaxis, self.Yaxis))  # guardamos la posicion en la que estuvo
         self.has_ate()  # en cada movimiento verificamos si cayo en comidita ica
@@ -176,6 +176,7 @@ class ejecutable:
         self.foods_copy = (
             []
         )  # Arreglo auxiliar para poder llevar las comidas a una interfaz grafica
+        self.mega_particulas = [] # Arreglo para guardar las particulas por cada simulacion
         print(  # info util
             "La simulacion se ejecutara por",
             cicles,
@@ -335,6 +336,7 @@ class ejecutable:
 
     def super_simulation(self, lifetime, food_quantity):
         self.create_food(food_quantity)
+        self.foods_copy = copy.deepcopy(self.foods)
 
         for i in range(self.cant_particles):
             self.particles.append(self.create_particle(lifetime, self.select_name(), i))
@@ -359,6 +361,7 @@ class ejecutable:
                     self.particles[i].lifetime -= 1
                 self.check_ate()
                 print("----------------------------------------------")
+            self.mega_particulas.append(copy.deepcopy(self.particles))
             for _ in range(self.cant_particles):
                 if self.particles[_].suvive_status:
                     print("✅ La partícula ", self.particles[_].name, " ha sobrevivido al ciclo")
