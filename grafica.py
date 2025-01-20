@@ -213,14 +213,15 @@ def main():
     # valores configurables, SOLO ENTEROS
 
     cicles = 3  # Puedes modificar para ingresar manualmente
-    num_puntos = 5 # El numero de puntos por lado de la cuadricula
+    cant_particles = 5 # CANTIDAD DE PARTICULAS A SIMULAR
+    num_puntos = 50 # El numero de puntos por lado de la cuadricula
     num_comidas = 3  # Puedes modificar para ingresar manualmente
-    cant_pasos = 3  # Puedes modificar para ingresar
+    cant_pasos = 10  # Puedes modificar para ingresar
 
     #elementos de ejecucion, NO TOCARRRR
     if cicles > 0 and num_puntos > 0 and num_comidas > 0 and cant_pasos > 0:
         dimension_dibujo = int(height / num_puntos)-1 # Dimension para dibujar particulas y comida
-        simu = ejecutable(cicles, cicles, num_puntos)
+        simu = ejecutable(cicles, cant_particles, num_puntos)
         global pantalla
         simu.super_simulation(cant_pasos, num_comidas)  # Esto es para poder generar comidas, y particulas en ejecutable
         print("Entroa11")
