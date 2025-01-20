@@ -107,7 +107,6 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
     texto_ciclo = lienzo.create_text(10, 10, text="Ciclo 1", anchor="nw", fill="black", font=("Arial", 16))
 
     particula_ids = []  # Lista para almacenar tuplas (ID partícula, ID texto)
-    texto_ids = []  # Lista para almacenar solo los IDs de los textos de las partículas
     particula_final_ids = []  # Guardamos los ids de las partículas finales
 
     # Simular el movimiento de todas las partículas simultáneamente
@@ -117,24 +116,15 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
         lienzo.update()
 
         # Dibujar las partículas originales para el ciclo actual
-        particula_ids.clear()  # Limpiar las listas de partículas y textos
-        texto_ids.clear()
-        particula_final_ids.clear()
+        particula_ids = []  # Limpiar las listas de partículas y textos
+        particula_final_ids = []
 
         lienzo.after(1000)
         for p in partic:  # Dibujar las partículas del ciclo actual
             particula_id, texto_id = dibujar_particula(p, dimension_dibujo)
             particula_ids.append((particula_id, texto_id))  # Guardamos la tupla de IDs
-            texto_ids.append(texto_id)  # Guardamos solo los IDs de los textos para uso futuro
-
         # Actualizar posiciones de todas las partículas de forma simultánea
         actualizar_particulas_simultaneas(partic, comidas, particula_ids, dimension_dibujo, comida_ids)
-
-        def dibujar_finales():
-            for p in partic:
-                particula_final_id = dibujar_particula_final(p, dimension_dibujo)
-                particula_final_ids.append(particula_final_id)
-            print("Me llamaste")
 
         def eliminar_final_punto():
             # Eliminar las partículas finales después de un ciclo
@@ -149,13 +139,14 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
 
         lienzo.after(600, eliminar_final_punto())
         lienzo.update()  # Actualizar la vista
+    lienzo.create_text(900, 350, text=f"Se acabaron las particulas en el ciclo {ciclo}", fill="black", font=("Arial", 16))
 
 
 def actualizar_particulas_simultaneas(particulas, comidas, particula_ids, dimension, comida_ids, start_x=50, start_y=50):
     """
     Actualiza las posiciones de todas las partículas simultáneamente en cada paso de su recorrido.
     """
-    max_pasos = max(len(part.recorrido) for part in particulas)  # Determinar el recorrido más largo
+    max_pasos = len(particulas[len(particulas) - 1].recorrido) # Determinar el recorrido más largo
 
     for paso in range(max_pasos):
         for i, particula in enumerate(particulas):
@@ -232,13 +223,10 @@ def main():
         simu = ejecutable(cicles, cicles, num_puntos)
         global pantalla
         simu.super_simulation(cant_pasos, num_comidas)  # Esto es para poder generar comidas, y particulas en ejecutable
+        print("Entroa11")
         comidas = simu.foods_copy # Obtenemos el array de las comidas para poder graficar
-        particulas = simu.mega_particulas  # Atributo modificado de ejecutable, ahora tiene una lista de particulas)
-        print("Entroa")
-        print(len(particulas[0]))
-        print(len(particulas[1]))
-        print(len(particulas[2]))
-        simulacion(particulas, comidas, dimension_dibujo, num_puntos)
+        mega_particulas = simu.mega_particulas  # Atributo modificado de ejecutable, ahora tiene una lista de particulas)
+        simulacion(mega_particulas, comidas, dimension_dibujo, num_puntos)
         pantalla.mainloop()
     else:
         print("Error: Todos los valores deben ser mayores que 0.")

@@ -343,13 +343,13 @@ class ejecutable:
             self.particles[i].presentation()
             print("----------------------------------------------")
 
-        for i in range(self.cicles):  # repetimos la simulacion por el numero de ciclos que se pidio
+        for i in range(self.cicles):  # repetimos la simulación por el número de ciclos que se pidió
             print("🔄 Ciclo ", i + 1)  # informamos el ciclo actual
             print("----------------------------------------------")
 
             if self.cant_particles == 0:
                 print("🚫 No hay partículas en el ciclo ", i + 1)
-                exit()
+                continue
 
             for i in range(self.cant_particles):
                 self.particles[i].presentation()
@@ -361,7 +361,9 @@ class ejecutable:
                     self.particles[i].lifetime -= 1
                 self.check_ate()
                 print("----------------------------------------------")
+
             self.mega_particulas.append(copy.deepcopy(self.particles))
+
             for _ in range(self.cant_particles):
                 if self.particles[_].suvive_status:
                     print("✅ La partícula ", self.particles[_].name, " ha sobrevivido al ciclo")
@@ -369,9 +371,15 @@ class ejecutable:
                     print("💀 La partícula ", self.particles[_].name, " ha muerto")
             print("----------------------------------------------")
 
+
+            for i in range(self.cant_particles):
+                aux = self.particles[i].recorrido[len(self.particles[i].recorrido) - 1]
+                print(f'Valor de aux {aux}')
+                self.particles[i].recorrido.clear()
+                self.particles[i].recorrido.append(aux)
+            # Depurar y reiniciar atributos para el próximo ciclo
             self.depurate_particles()
             self.restore_health()
-
             
 
 if __name__ == "__main__":
