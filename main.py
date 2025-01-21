@@ -240,6 +240,24 @@ class ejecutable:
 
         # la mandamos bien peinadita a la particula
         return particle(name, x, y, lifetime, id)
+    
+    def restar_locations(self):
+        for i in range(len(self.particles)):
+            if random.choice([True, False]):  # si es true optamos por algun margen de x
+                x = random.choice(
+                    [0, self.dimension - 1]
+                )  # sera el margen de x mas bajo o mas alto, 0 o top
+                y = random.randint(
+                    0, self.dimension - 1
+                )  # y sera el que sea, igual no saldra de x
+            else:  # de lo contrario optamos por algun margen de y
+                x = random.randint(0, self.dimension - 1)  # cualquier valor pa x
+                y = random.choice(
+                    [0, self.dimension - 1]
+                )  # el y sera el borde izquierdo (0) o el derecho (top)
+            self.particles[i].Xaxis = x
+            self.particles[i].Yaxis = y
+            print(f"La partícula {self.particles[i].name} ha sido reubicada en la posición ({x}, {y})")
 
     # Método que crea la comida en la simulación, nomas te pide la cantidad
     # de aumentar los atributos de la comida, creo que sufriremos aqui
@@ -364,6 +382,9 @@ class ejecutable:
             print("🔄 Ciclo ", i + 1)  # informamos el ciclo actual
             print("----------------------------------------------")
 
+            if i != 0:
+                self.restar_locations()
+                
             if self.cant_particles == 0:
                 print("🚫 No hay partículas en el ciclo ", i + 1)
                 continue
@@ -399,6 +420,7 @@ class ejecutable:
             # Depurar y reiniciar atributos para el próximo ciclo
             self.depurate_particles()
             self.restore_health()
+            
 
 
 if __name__ == "__main__":
