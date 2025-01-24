@@ -212,11 +212,11 @@ def actualizar_particula(particula, comidas, particula_id, dimension, comida_ids
 def main():
     # valores configurables, SOLO ENTEROS
 
-    cicles = 15  # Puedes modificar para ingresar manualmente
-    cant_particles = 1 # CANTIDAD DE PARTICULAS A SIMULAR
-    num_puntos = 5 # El numero de puntos por lado de la cuadricula
-    num_comidas = 16  # Puedes modificar para ingresar manualmente
-    cant_pasos = 5  # Puedes modificar para ingresar
+    cicles = 3  # Puedes modificar para ingresar manualmente
+    cant_particles = 10 # CANTIDAD DE PARTICULAS A SIMULAR
+    num_puntos = 10 # El numero de puntos por lado de la cuadricula
+    num_comidas = 15 # Puedes modificar para ingresar manualmente
+    cant_pasos = 10  # Puedes modificar para ingresar
 
     #elementos de ejecucion, NO TOCARRRR
     if cicles > 0 and num_puntos > 0 and num_comidas > 0 and cant_pasos > 0:
