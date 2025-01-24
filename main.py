@@ -67,7 +67,7 @@ class particle:
 
     def simple_movement(self):
         aux_paso_incorrecto = False; # Variable para comprobar si la particula se salio de la dimension, o dio un paso inccorecto
-        #self.detect_food_in_range()
+        self.detect_food_in_range()
         aux_Xaxis = self.Xaxis
         aux_Yaxis = self.Yaxis
         

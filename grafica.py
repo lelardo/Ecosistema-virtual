@@ -143,6 +143,8 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
                 lienzo.delete(coso[1])
             for particula_id in particula_ids:
                 lienzo.delete(particula_id[0])
+            for identificador in particula_ids:
+                lienzo.delete(identificador[2])
 
         # Llamar a la función de eliminación 600 ms después de haber mostrado la partícula final
 
@@ -278,13 +280,12 @@ def main():
         simu = ejecutable(cicles, cant_particles, num_puntos)
         global pantalla
         simu.super_simulation(cant_pasos, num_comidas)  # Esto es para poder generar comidas, y particulas en ejecutable
-        print("Entroa11")
         comidas = simu.foods_copy # Obtenemos el array de las comidas para poder graficar
         mega_particulas = simu.mega_particulas  # Atributo modificado de ejecutable, ahora tiene una lista de particulas)
         for partic in mega_particulas:
             for p in partic:
-                print("Longitud original del recorrido:", len(p.recorrido))
-                print("Recorrido original:", p.recorrido)
+                #print("Longitud original del recorrido:", len(p.recorrido))
+                #print("Recorrido original:", p.recorrido)
                 # Filtrar los valores consecutivos duplicados
                 if p.recorrido:  # Verificamos que el recorrido no esté vacío
                     nuevo_recorrido = [p.recorrido[0]]  # Iniciamos con el primer elemento
@@ -292,7 +293,7 @@ def main():
                         if p.recorrido[i] != p.recorrido[i - 1]:  # Comparamos con el elemento anterior
                             nuevo_recorrido.append(p.recorrido[i])
                     p.recorrido = nuevo_recorrido  # Asignamos el recorrido sin duplicados
-                print("Recorrido filtrado:", p.recorrido)
+                #print("Recorrido filtrado:", p.recorrido)
         simulacion(mega_particulas, comidas, dimension_dibujo, num_puntos)
         pantalla.mainloop()
     else:
