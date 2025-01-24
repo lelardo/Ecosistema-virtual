@@ -74,7 +74,15 @@ def dibujar_particula(particula, dimension, start_x=50, start_y=50):
         font=("Arial", 10)
     )
 
-    return particula_id, texto_id
+    identificador_id = lienzo.create_text(
+        x,
+        y + 15,  # Posicionar un poco más abajo de la partícula
+        text=particula.id,
+        fill="red",
+        font=("Arial", 14)
+    )
+
+    return particula_id, texto_id, identificador_id
 
 
 def dibujar_particula_final(particula, dimension, start_x=50, start_y=50):
@@ -108,6 +116,7 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
 
     particula_ids = []  # Lista para almacenar tuplas (ID partícula, ID texto)
     particula_final_ids = []  # Guardamos los ids de las partículas finales
+    identificador_particula = []  # Guardamos los ids de las partículas finales
 
     # Simular el movimiento de todas las partículas simultáneamente
     for ciclo, partic in enumerate(particulas, start=1):
@@ -121,8 +130,8 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
 
         lienzo.after(1000)
         for p in partic:  # Dibujar las partículas del ciclo actual
-            particula_id, texto_id = dibujar_particula(p, dimension_dibujo)
-            particula_ids.append((particula_id, texto_id))  # Guardamos la tupla de IDs
+            particula_id, texto_id, identificador_id = dibujar_particula(p, dimension_dibujo)
+            particula_ids.append((particula_id, texto_id, identificador_id))  # Guardamos la tupla de IDs
         # Actualizar posiciones de todas las partículas de forma simultánea
         actualizar_particulas_simultaneas(partic, comidas, particula_ids, dimension_dibujo, comida_ids)
 
@@ -146,7 +155,7 @@ def actualizar_particulas_simultaneas(particulas, comidas, particula_ids, dimens
     """
     Actualiza las posiciones de todas las partículas simultáneamente en cada paso de su recorrido.
     """
-    max_pasos = len(particulas[len(particulas) - 1].recorrido) # Determinar el recorrido más largo
+    max_pasos = len(particulas[len(particulas) - 1].recorrido)  # Determinar el recorrido más largo
 
     for paso in range(max_pasos):
         for i, particula in enumerate(particulas):
@@ -159,18 +168,41 @@ def actualizar_particulas_simultaneas(particulas, comidas, particula_ids, dimens
 
                 # Verificar si la partícula está en la posición de una comida
                 for j in range(len(comidas) - 1, -1, -1):  # Iterar al revés para eliminar comida
-                    if (x, y) == (comidas[j].Xaxis, comidas[j].Yaxis):
+                    comida_x, comida_y = comidas[j].Xaxis, comidas[j].Yaxis
+
+                    # Verificar si la partícula está exactamente en la posición de la comida
+                    if (x, y) == (comida_x, comida_y):
                         lienzo.delete(comida_ids[j])  # Eliminar comida del lienzo
                         comida_ids.pop(j)  # Eliminar el ID de comida
                         comidas.pop(j)  # Eliminar la comida
 
+                # Verificar si la partícula pasa en línea recta entre dos pasos consecutivos
+                if paso > 0:  # Si no es el primer paso
+                    x_prev, y_prev = particula.recorrido[paso - 1]  # Paso anterior
+
+                    for j in range(len(comidas) - 1, -1, -1):  # Iterar al revés para eliminar comida
+                        comida_x, comida_y = comidas[j].Xaxis, comidas[j].Yaxis
+
+                        # Movimiento vertical
+                        if x_prev == x and min(y_prev, y) <= comida_y <= max(y_prev, y) and comida_x == x:
+                            lienzo.delete(comida_ids[j])
+                            comida_ids.pop(j)
+                            comidas.pop(j)
+                        # Movimiento horizontal
+                        elif y_prev == y and min(x_prev, x) <= comida_x <= max(x_prev, x) and comida_y == y:
+                            lienzo.delete(comida_ids[j])
+                            comida_ids.pop(j)
+                            comidas.pop(j)
+
                 # Actualizar la posición visual de la partícula y su texto
-                particula_id, texto_id = particula_ids[i]
+                particula_id, texto_id, identificador_id = particula_ids[i]
+                lienzo.coords(identificador_id, x_px, y_px + 10)
                 lienzo.coords(particula_id, x_px - 5, y_px - 5, x_px + 5, y_px + 5)
                 lienzo.coords(texto_id, x_px, y_px - 15)  # Mover el texto junto con la partícula
 
         lienzo.update()
         lienzo.after(500)  # Pausa entre pasos
+
 
 
 
@@ -190,13 +222,35 @@ def actualizar_particula(particula, comidas, particula_id, dimension, comida_ids
         x2_px = start_x + x2 * dimension
         y2_px = start_y + y2 * dimension
 
-        # Verificar si la partícula se encuentra en una posición con comida
+        # Verificar si la partícula pasa por una posición con comida
         for j in range(len(comidas) - 1, -1, -1):  # Iterar en orden inverso
-            if (x1, y1) == (comidas[j].Xaxis, comidas[j].Yaxis):
-                print('Se elimino')
+            comida_x, comida_y = comidas[j].Xaxis, comidas[j].Yaxis
+
+            # Verificar si la comida está exactamente en x1, y1
+            if (x1, y1) == (comida_x, comida_y):
+                print('Se eliminó en posición exacta')
                 lienzo.delete(comida_ids[j])  # Eliminar comida del lienzo
                 comida_ids.pop(j)  # Eliminar de los IDs
                 comidas.pop(j)  # Eliminar de la lista de comidas
+                continue  # Pasar al siguiente elemento
+
+            # Verificar si la comida está en línea recta entre (x1, y1) y (x2, y2)
+            if x1 == x2:  # Movimiento vertical
+                if comida_x == x1 and min(y1, y2) <= comida_y <= max(y1, y2):
+                    print('Se eliminó en línea recta (vertical)')
+                    print('Entro en eliminar en medio horizonte')
+                    lienzo.delete(comida_ids[j])
+                    comida_ids.pop(j)
+                    comidas.pop(j)
+            elif y1 == y2:  # Movimiento horizontal
+                if comida_y == y1 and min(x1, x2) <= comida_x <= max(x1, x2):
+                    print('Se eliminó en línea recta (horizontal)')
+                    print('Entro en eliminar en medio vertical')
+                    lienzo.delete(comida_ids[j])
+                    comida_ids.pop(j)
+                    comidas.pop(j)
+
+
 
         # Actualizar las coordenadas de la partícula (óvalo)
         lienzo.coords(particula_oval_id, x1_px - 5, y1_px - 5, x1_px + 5, y1_px + 5)
@@ -213,9 +267,9 @@ def main():
     # valores configurables, SOLO ENTEROS
 
     cicles = 3  # Puedes modificar para ingresar manualmente
-    cant_particles = 10 # CANTIDAD DE PARTICULAS A SIMULAR
+    cant_particles = 3 # CANTIDAD DE PARTICULAS A SIMULAR
     num_puntos = 10 # El numero de puntos por lado de la cuadricula
-    num_comidas = 15 # Puedes modificar para ingresar manualmente
+    num_comidas = 20 # Puedes modificar para ingresar manualmente
     cant_pasos = 10  # Puedes modificar para ingresar
 
     #elementos de ejecucion, NO TOCARRRR
@@ -227,6 +281,18 @@ def main():
         print("Entroa11")
         comidas = simu.foods_copy # Obtenemos el array de las comidas para poder graficar
         mega_particulas = simu.mega_particulas  # Atributo modificado de ejecutable, ahora tiene una lista de particulas)
+        for partic in mega_particulas:
+            for p in partic:
+                print("Longitud original del recorrido:", len(p.recorrido))
+                print("Recorrido original:", p.recorrido)
+                # Filtrar los valores consecutivos duplicados
+                if p.recorrido:  # Verificamos que el recorrido no esté vacío
+                    nuevo_recorrido = [p.recorrido[0]]  # Iniciamos con el primer elemento
+                    for i in range(1, len(p.recorrido)):
+                        if p.recorrido[i] != p.recorrido[i - 1]:  # Comparamos con el elemento anterior
+                            nuevo_recorrido.append(p.recorrido[i])
+                    p.recorrido = nuevo_recorrido  # Asignamos el recorrido sin duplicados
+                print("Recorrido filtrado:", p.recorrido)
         simulacion(mega_particulas, comidas, dimension_dibujo, num_puntos)
         pantalla.mainloop()
     else:

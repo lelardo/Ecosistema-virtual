@@ -66,6 +66,7 @@ class particle:
                     break
 
     def simple_movement(self):
+        aux_paso_incorrecto = False; # Variable para comprobar si la particula se salio de la dimension, o dio un paso inccorecto
         #self.detect_food_in_range()
         aux_Xaxis = self.Xaxis
         aux_Yaxis = self.Yaxis
@@ -105,7 +106,7 @@ class particle:
                 self.Yaxis = aux_Yaxis
                 self.Xaxis = aux_Xaxis
                 print("me sali de la dimension con un pasito")
-                self.simple_movement()
+                aux_paso_incorrecto = True # Si la particula se sale de la dimension, se marca como paso incorrecto
             else:
                 print(f"➡️{'  '}{self.name} , posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}")
         else:
@@ -116,7 +117,7 @@ class particle:
                 self.Yaxis = aux_Yaxis
                 self.Xaxis = aux_Xaxis
                 print("me sali de la dimension con superpoder")
-                self.simple_movement()
+                aux_paso_incorrecto = True # Si la particula se sale de la dimension, se marca como paso incorrecto
             else:
                 if self.Xaxis < 0:
                     self.Xaxis = 0
@@ -140,7 +141,10 @@ class particle:
                         print(f"🍽  La partícula {self.name} ha pillado comida en la posición intermedia ({global_foods[i].Xaxis}, {global_foods[i].Yaxis})")
                         global_foods[i].disappear()
 
-        self.recorrido.append((self.Xaxis, self.Yaxis))
+        if not aux_paso_incorrecto: # Comprobamos si la particula dio un paso incorrecto
+            self.recorrido.append((self.Xaxis, self.Yaxis)) # Si el paso fue correcto, almacenamos la posicion en el recorrido
+        else:
+            self.simple_movement() # En caso de que el paso haya sido incorrecto, se vuelve a llamar al metodo para que la particula de un paso correcto
 
         if self.lifetime == 0:
             print(f"⛔ La partícula {self.name} ha parado en la posición ({self.Xaxis}, {self.Yaxis})")
@@ -262,6 +266,7 @@ class ejecutable:
             print(f"La partícula {
                   self.particles[i].name} ha sido reubicada en la posición ({x}, {y})")
             self.particles[i].changing_cycle = False
+            self.particles[i].recorrido.append((x, y)) # Se añade punto de origen a la particula
 
     # Método que crea la comida en la simulación, nomas te pide la cantidad
     # de aumentar los atributos de la comida, creo que sufriremos aqui
@@ -410,10 +415,7 @@ class ejecutable:
             print("----------------------------------------------")
 
             for i in range(self.cant_particles):
-                aux = self.particles[i].recorrido[len(
-                    self.particles[i].recorrido) - 1]
-                self.particles[i].recorrido.clear()
-                self.particles[i].recorrido.append(aux)
+                self.particles[i].recorrido = [] # Reiniciamos el recorrido para poder graficar de mejor manera
             # Depurar y reiniciar atributos para el próximo ciclo
             self.depurate_particles()
             self.restore_health()
