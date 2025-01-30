@@ -268,7 +268,7 @@ def actualizar_particula(particula, comidas, particula_id, dimension, comida_ids
 def main():
     # valores configurables, SOLO ENTEROS
 
-    cicles = 3  # Puedes modificar para ingresar manualmente
+    cicles = 6  # Puedes modificar para ingresar manualmente
     cant_particles = 10 # CANTIDAD DE PARTICULAS A SIMULAR
     num_puntos = 15 # El numero de puntos por lado de la cuadricula
     num_comidas = 30 # Puedes modificar para ingresar manualmente
