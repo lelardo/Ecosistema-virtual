@@ -65,90 +65,97 @@ class particle:
                     print(f"👃 {self.name} ha detectado comida en ({food.Xaxis}, {food.Yaxis})")
                     break
 
-    def simple_movement(self):
-        aux_paso_incorrecto = False; # Variable para comprobar si la particula se salio de la dimension, o dio un paso inccorecto
-        self.detect_food_in_range()
-        aux_Xaxis = self.Xaxis
-        aux_Yaxis = self.Yaxis
+    def is_valid_position(self, x, y): # detecta si la posicion no esta fuera del plano astral
+        # sapeamos si se salio de los limites, falso es que no se salio
+        return (0 <= x < global_dimension and 
+                0 <= y < global_dimension and
+                not any(p.Xaxis == x and p.Yaxis == y for p in global_particles if p != self))
+
+    def calculate_next_position(self):
+            # Asignar movimiento hacia la comida, dependiendo del tipo
+            if self.hunting and self.target_food:  # Si está cazando y tiene un objetivo de comida
+                dx = self.target_food.Xaxis - self.Xaxis  # Calcular la diferencia en el eje X
+                dy = self.target_food.Yaxis - self.Yaxis  # Calcular la diferencia en el eje Y
+                if abs(dx) >= abs(dy):  # Si la diferencia en X es mayor o igual que en Y
+                    # Mover en el eje X hacia la comida
+                    return (self.Xaxis + (self.step_size if dx > 0 else -self.step_size), self.Yaxis)
+                # Mover en el eje Y hacia la comida
+                return (self.Xaxis, self.Yaxis + (self.step_size if dy > 0 else -self.step_size))
+            else:
+                # Movimiento aleatorio
+                if simple_random_walk():  # Si el resultado del movimiento aleatorio es True
+                    # Mover en el eje X en una dirección aleatoria
+                    return (self.Xaxis + (self.step_size if simple_random_walk() else -self.step_size), self.Yaxis)
+                # Mover en el eje Y en una dirección aleatoria
+                return (self.Xaxis, self.Yaxis + (self.step_size if simple_random_walk() else -self.step_size))
+
+    def check_intermediate_food(self, prev_x, prev_y, new_x, new_y):
+        # Si está en un ciclo de cambio, retorna inmediatamente sin hacer nada
+        if self.changing_cycle:
+            return
         
-        if self.hunting and self.target_food:
-            # Move one step towards food
-            if abs(self.Xaxis - self.target_food.Xaxis) >= abs(self.Yaxis - self.target_food.Yaxis):
-                # Move in X direction first
-                if self.Xaxis < self.target_food.Xaxis:
-                    self.Xaxis += self.step_size
-                else:
-                    self.Xaxis -= self.step_size
-            else:
-                # Move in Y direction first
-                if self.Yaxis < self.target_food.Yaxis:
-                    self.Yaxis += self.step_size
-                else:
-                    self.Yaxis -= self.step_size
-        else:
-            # Random movement
-            if simple_random_walk():
-                if simple_random_walk():
-                    self.Xaxis += self.step_size
-                else:
-                    self.Xaxis -= self.step_size
-            else:
-                if simple_random_walk():
-                    self.Yaxis += self.step_size
-                else:
-                    self.Yaxis -= self.step_size
+        # Crea un rango de valores X entre la posición previa y nueva (inclusive)
+        x_range = range(min(prev_x, new_x), max(prev_x, new_x) + 1)
+        # Crea un rango de valores Y entre la posición previa y nueva (inclusive)
+        y_range = range(min(prev_y, new_y), max(prev_y, new_y) + 1)
+        
+        # Itera sobre todos los alimentos disponibles en el juego
+        for food in global_foods:
+            # Verifica si:
+            # 1. El alimento está activo (status)
+            # 2. La coordenada X del alimento está en el rango de movimiento
+            # 3. La coordenada Y del alimento está en el rango de movimiento
+            # 4. El alimento no está en la posición final del movimiento
+            if (food.status and 
+                food.Xaxis in x_range and 
+                food.Yaxis in y_range and 
+                not (food.Xaxis == new_x and food.Yaxis == new_y)):
+                
+                # Imprime mensaje indicando que se encontró comida
+                print(f"🍽  La partícula {self.name} ha pillado comida en la posición intermedia ({food.Xaxis}, {food.Yaxis})")
+                
+                # Si la partícula ya está llena y no tiene superpoderes, mejora su paso
+                if self.full_food and not self.superpower:
+                    self.upgrade_step()
+                
+                # Marca la partícula como llena
+                self.full_food = True
+                
+                # Hace desaparecer la comida consumida
+                food.disappear()
 
-        if self.step_size == 1:
-            if (((self.Xaxis < 0) and (aux_Xaxis == 0))
-                or ((self.Xaxis >= global_dimension) and (aux_Xaxis == global_dimension-1))
-                or ((self.Yaxis < 0) and (aux_Yaxis == 0))
-                or ((self.Yaxis >= global_dimension) and (aux_Yaxis == global_dimension-1))):
-                self.Yaxis = aux_Yaxis
-                self.Xaxis = aux_Xaxis
-                print("me sali de la dimension con un pasito")
-                aux_paso_incorrecto = True # Si la particula se sale de la dimension, se marca como paso incorrecto
-            else:
-                print(f"➡️{'  '}{self.name} , posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}")
-        else:
-            if (aux_Xaxis == 0 and self.Xaxis < 0
-                or aux_Yaxis == 0 and self.Yaxis < 0
-                or aux_Xaxis == global_dimension - 1 and self.Xaxis >= global_dimension
-                or aux_Yaxis == global_dimension - 1 and self.Yaxis >= global_dimension):
-                self.Yaxis = aux_Yaxis
-                self.Xaxis = aux_Xaxis
-                print("me sali de la dimension con superpoder")
-                aux_paso_incorrecto = True # Si la particula se sale de la dimension, se marca como paso incorrecto
-            else:
-                if self.Xaxis < 0:
-                    self.Xaxis = 0
-                    print("me sali atras de x")
-                if self.Xaxis >= global_dimension:
-                    self.Xaxis = global_dimension - 1
-                    print("me sali adelante de x")
-                if self.Yaxis < 0:
-                    self.Yaxis = 0
-                    print("me sali atras de y")
-                if self.Yaxis >= global_dimension:
-                    self.Yaxis = global_dimension - 1
-                    print("me sali adelante de y")
-                print(f"➡️{'  '}{self.name} , posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}")
-
-            x_range = range(min(aux_Xaxis, self.Xaxis), max(aux_Xaxis, self.Xaxis) + 1)
-            y_range = range(min(aux_Yaxis, self.Yaxis), max(aux_Yaxis, self.Yaxis) + 1)
-            if not self.changing_cycle:
-                for i in range(len(global_foods)):
-                    if (global_foods[i].Xaxis in x_range and global_foods[i].Yaxis in y_range) and not (global_foods[i].Xaxis == self.Xaxis and global_foods[i].Yaxis == self.Yaxis):
-                        print(f"🍽  La partícula {self.name} ha pillado comida en la posición intermedia ({global_foods[i].Xaxis}, {global_foods[i].Yaxis})")
-                        global_foods[i].disappear()
-
-        if not aux_paso_incorrecto: # Comprobamos si la particula dio un paso incorrecto
-            self.recorrido.append((self.Xaxis, self.Yaxis)) # Si el paso fue correcto, almacenamos la posicion en el recorrido
-        else:
-            self.simple_movement() # En caso de que el paso haya sido incorrecto, se vuelve a llamar al metodo para que la particula de un paso correcto
-
-        if self.lifetime == 0:
-            print(f"⛔ La partícula {self.name} ha parado en la posición ({self.Xaxis}, {self.Yaxis})")
-
+    def simple_movement(self):
+        # Detecta si hay comida en el rango de olfato de la partícula
+        self.detect_food_in_range()
+        
+        # Guarda la posición actual antes de moverse
+        prev_x, prev_y = self.Xaxis, self.Yaxis
+        
+        # Intenta hasta 4 direcciones diferentes para encontrar un movimiento válido
+        for _ in range(4):
+            # Calcula la siguiente posición basada en si está cazando o moviéndose aleatoriamente
+            next_x, next_y = self.calculate_next_position()
+            
+            # Verifica si la nueva posición es válida (dentro de límites y sin colisiones)
+            if self.is_valid_position(next_x, next_y):
+                # Actualiza la posición de la partícula
+                self.Xaxis, self.Yaxis = next_x, next_y
+                
+                # Imprime la nueva posición y vida restante
+                print(f"➡️  {self.name}, posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}")
+                
+                # Verifica si hay comida en el camino entre la posición anterior y la nueva
+                self.check_intermediate_food(prev_x, prev_y, next_x, next_y)
+                
+                # Añade la nueva posición al registro de recorrido
+                self.recorrido.append((self.Xaxis, self.Yaxis))
+                return
+        
+        # Si no se encontró ningún movimiento válido, se queda en el mismo lugar
+        print(f"🚫 {self.name} no puede moverse desde ({self.Xaxis}, {self.Yaxis})")
+        
+        # Añade la posición actual al recorrido aunque no se haya movido
+        self.recorrido.append((self.Xaxis, self.Yaxis))
 
     def upgrade_step(self):  # metodo para mejorar el tamaño de paso
         self.step_size += 1  # aumentamos el tamaño de paso en 1]
@@ -208,6 +215,9 @@ class ejecutable:
 
         global global_food_map
         global_food_map = self.foodmap
+
+        global global_particles
+        global_particles = self.particles
 
     # Método que elige un nombre aleatorio de una lista, me gusta que las particulas tengan identidad
     # creo que es un poco pesado de ejecutar, posible descarte
@@ -397,6 +407,7 @@ class ejecutable:
 
             for _ in range(lifetime):
                 for i in range(self.cant_particles):
+                    
                     self.particles[i].simple_movement()
                     self.particles[i].lifetime -= 1
                         
