@@ -1,12 +1,18 @@
 import tkinter as tk
 from main import *
+from tkinter import messagebox
 
+AZUL_OSCURO = "#9999FF"
+AZUL_CLARO = "#99CCFF"
+AZUL_BOTON = "#6699FF"
+VERDE = "#00ff00"
+ROJO = "#ff0000"
 pantalla = tk.Tk()
 pantalla.title("Simulacion Ecosistema")
-pantalla.configure(bg="white")
+pantalla.configure(bg=AZUL_OSCURO)
 width = 1280
 height = 720
-lienzo = tk.Canvas(pantalla, width=width, height=height)
+lienzo = tk.Canvas(pantalla, width=width, height=height, bg=AZUL_OSCURO)
 lienzo.pack()
 
 
@@ -101,7 +107,7 @@ def dibujar_particula_final(particula, dimension, start_x=50, start_y=50):
     )
 
 
-def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
+def simulacion(particulas, comidas, dimension_dibujo, num_puntos, cant_particulas):
     # Limpiar lienzo antes de iniciar un nuevo ciclo
     lienzo.delete("all")  # Eliminar todos los elementos del lienzo (partículas y comida)
 
@@ -112,7 +118,13 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
     dibujar_cuadrilla(num_puntos, dimension_dibujo)
 
     # Texto para indicar el ciclo actual
-    texto_ciclo = lienzo.create_text(10, 10, text="Ciclo 1", anchor="nw", fill="black", font=("Arial", 16))
+    texto_ciclo = lienzo.create_text(10, 10, text="🔄 Ciclo 1", anchor="nw", fill="black", font=("Arial", 16))
+    aux_particulas_vivas = len(particulas[-1])
+    lienzo.create_text(900, 50, text="📈 Datos de Entrada", fill="black", font=("Arial", 16))
+    lienzo.create_text(900, 100, text=f"🔴 Particulas: {cant_particulas}", fill="black", font=("Arial", 16))
+    lienzo.create_text(900, 150, text=f"🍔 Comida: {len(comidas)}", fill="black", font=("Arial", 16))
+    lienzo.create_text(900, 200, text=f"⚫ Dimension del mapa: {num_puntos - 1} * {num_puntos - 1}", fill="black", font=("Arial", 16))
+    lienzo.create_text(900, 250, text=f"➡️ Pasos: {len(particulas[1][0].recorrido) - 1}", fill="black", font=("Arial", 16))
 
     particula_ids = []  # Lista para almacenar tuplas (ID partícula, ID texto)
     particula_final_ids = []  # Guardamos los ids de las partículas finales
@@ -121,7 +133,7 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
     # Simular el movimiento de todas las partículas simultáneamente
     for ciclo, partic in enumerate(particulas, start=1):
         # Actualizar el mensaje del ciclo
-        lienzo.itemconfig(texto_ciclo, text=f"Ciclo {ciclo}")
+        lienzo.itemconfig(texto_ciclo, text=f"🔄 Ciclo {ciclo}")
         lienzo.update()
 
         # Dibujar las partículas originales para el ciclo actual
@@ -150,7 +162,9 @@ def simulacion(particulas, comidas, dimension_dibujo, num_puntos):
 
         lienzo.after(600, eliminar_final_punto())
         lienzo.update()  # Actualizar la vista
-    lienzo.create_text(900, 350, text=f"Se acabaron las particulas en el ciclo {ciclo}", fill="black", font=("Arial", 16))
+    lienzo.create_text(900, 350, text=f"Se acabaron las particulas en el ciclo: {ciclo}", fill="black", font=("Arial", 16))
+    lienzo.create_text(900, 400, text=f"🍔 Comida restante: {len(comida_ids)}", fill="black", font=("Arial", 16))
+    lienzo.create_text(900, 450, text=f"✅ Particulas que llegaron al ultimo ciclo: {aux_particulas_vivas}", fill="black", font=("Arial", 16))
 
 
 def actualizar_particulas_simultaneas(particulas, comidas, particula_ids, dimension, comida_ids, start_x=50, start_y=50):
@@ -264,41 +278,84 @@ def actualizar_particula(particula, comidas, particula_id, dimension, comida_ids
         lienzo.after(500)  # Esperar medio segundo antes de hacer la siguiente acción
 
 
+def main_simulation(cicles, cant_particles, num_puntos, num_comidas, cant_pasos):
+    # Aquí va el código de la simulación que quieres ejecutar
+    dimension_dibujo = int(height / num_puntos) - 1  # Ajustar según tu pantalla
+    simu = ejecutable(cicles, cant_particles, num_puntos)
+    simu.super_simulation(cant_pasos, num_comidas)
+    comidas = simu.foods_copy
+    mega_particulas = simu.mega_particulas
+    simulacion(mega_particulas, comidas, dimension_dibujo, num_puntos, cant_particles)
 
-def main():
-    # valores configurables, SOLO ENTEROS
+def crear_ventana():
+    # Crear ventana principal
+    ventana = tk.Tk()
+    ventana.title("Configuración y Simulación")
+    ventana.configure(bg=AZUL_OSCURO)
 
-    cicles = 3  # Puedes modificar para ingresar manualmente
-    cant_particles = 10 # CANTIDAD DE PARTICULAS A SIMULAR
-    num_puntos = 15 # El numero de puntos por lado de la cuadricula
-    num_comidas = 30 # Puedes modificar para ingresar manualmente
-    cant_pasos = 15  # Puedes modificar para ingresar
+    # Variables para los valores configurables
+    cicles_var = tk.StringVar(value="3")
+    cant_particles_var = tk.StringVar(value="10")
+    num_puntos_var = tk.StringVar(value="5")
+    num_comidas_var = tk.StringVar(value="5")
+    cant_pasos_var = tk.StringVar(value="15")
 
-    #elementos de ejecucion, NO TOCARRRR
-    if cicles > 0 and num_puntos > 0 and num_comidas > 0 and cant_pasos > 0:
-        dimension_dibujo = int(height / num_puntos)-1 # Dimension para dibujar particulas y comida
-        simu = ejecutable(cicles, cant_particles, num_puntos)
-        global pantalla
-        simu.super_simulation(cant_pasos, num_comidas)  # Esto es para poder generar comidas, y particulas en ejecutable
-        comidas = simu.foods_copy # Obtenemos el array de las comidas para poder graficar
-        mega_particulas = simu.mega_particulas  # Atributo modificado de ejecutable, ahora tiene una lista de particulas)
-        for partic in mega_particulas:
-            for p in partic:
-                #print("Longitud original del recorrido:", len(p.recorrido))
-                #print("Recorrido original:", p.recorrido)
-                # Filtrar los valores consecutivos duplicados
-                if p.recorrido:  # Verificamos que el recorrido no esté vacío
-                    nuevo_recorrido = [p.recorrido[0]]  # Iniciamos con el primer elemento
-                    for i in range(1, len(p.recorrido)):
-                        if p.recorrido[i] != p.recorrido[i - 1]:  # Comparamos con el elemento anterior
-                            nuevo_recorrido.append(p.recorrido[i])
-                    p.recorrido = nuevo_recorrido  # Asignamos el recorrido sin duplicados
-                #print("Recorrido filtrado:", p.recorrido)
-        simulacion(mega_particulas, comidas, dimension_dibujo, num_puntos)
-        pantalla.mainloop()
-    else:
-        print("Error: Todos los valores deben ser mayores que 0.")
-        pantalla.destroy()
+    # Etiquetas y campos de entrada para los valores
+    tk.Label(ventana, text="🔄 Ciclos:", bg=AZUL_OSCURO).grid(row=0, column=0)
+    cicles_entry = tk.Entry(ventana, textvariable=cicles_var, bg=AZUL_CLARO, fg="black")
+    cicles_entry.grid(row=0, column=1)
+
+    tk.Label(ventana, text="🔴 Cantidad de partículas:", bg=AZUL_OSCURO).grid(row=1, column=0)
+    cant_particles_entry = tk.Entry(ventana, textvariable=cant_particles_var, bg=AZUL_CLARO, fg="black")
+    cant_particles_entry.grid(row=1, column=1)
+
+    tk.Label(ventana, text="⚫ Número de puntos:", bg=AZUL_OSCURO).grid(row=2, column=0)
+    num_puntos_entry = tk.Entry(ventana, textvariable=num_puntos_var, bg=AZUL_CLARO, fg="black")
+    num_puntos_entry.grid(row=2, column=1)
+
+    tk.Label(ventana, text="🍔 Número de comidas:", bg=AZUL_OSCURO).grid(row=3, column=0)
+    num_comidas_entry = tk.Entry(ventana, textvariable=num_comidas_var, bg=AZUL_CLARO, fg="black")
+    num_comidas_entry.grid(row=3, column=1)
+
+    tk.Label(ventana, text="➡️ Cantidad de pasos:", bg=AZUL_OSCURO).grid(row=4, column=0)
+    cant_pasos_entry = tk.Entry(ventana, textvariable=cant_pasos_var, bg=AZUL_CLARO, fg="black")
+    cant_pasos_entry.grid(row=4, column=1)
+
+    # Variable para el mensaje de error
+    error_message = tk.Label(ventana, text="", fg="red", bg=AZUL_OSCURO)
+    error_message.grid(row=6, column=0, columnspan=2)
+
+    # Función para validar que se ingresen solo números enteros
+    def validar_entrada():
+        try:
+            cicles = int(cicles_entry.get())
+            cant_particles = int(cant_particles_entry.get())
+            num_puntos = int(num_puntos_entry.get())
+            num_comidas = int(num_comidas_entry.get())
+            cant_pasos = int(cant_pasos_entry.get())
+
+            # Validar que todos los valores sean mayores que 0
+            if cicles <= 0 or cant_particles <= 0 or num_puntos <= 0 or num_comidas <= 0 or cant_pasos <= 0:
+                error_message.config(text="Error: Todos los valores deben ser mayores que 0.")
+                return  # No continuar con la simulación si hay valores incorrectos
+
+            # Validar que el número de comidas no exceda el máximo posible
+            max_food_possible = (num_puntos - 1) * (num_puntos - 1)
+            if num_comidas > max_food_possible:
+                error_message.config(text=f"Error: El número máximo de comidas es {max_food_possible}.")
+                return  # No continuar con la simulación si el número de comidas es inválido
+
+            # Si todos los valores son correctos, ejecutar la simulación
+            ventana.destroy()  # Cerrar la ventana de configuración
+            main_simulation(cicles, cant_particles, num_puntos, num_comidas, cant_pasos)  # Ejecutar simulación
+        except ValueError:
+            error_message.config(text="Error: Todos los valores deben ser números enteros.")
+
+    # Botón para iniciar la simulación
+    iniciar_button = tk.Button(ventana, text="Iniciar Simulación", command=validar_entrada, bg=AZUL_BOTON)
+    iniciar_button.grid(row=5, column=0, columnspan=2)
+
+    ventana.mainloop()
 
 if __name__ == "__main__":
-    main()
+    crear_ventana()

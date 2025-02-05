@@ -424,6 +424,9 @@ class ejecutable:
                     print("💀 La partícula ",
                           self.particles[_].name, " ha muerto")
             print("----------------------------------------------")
+            print("😊 Particulas restantes en el ciclo ", len(self.particles))
+            print("🍽 Comida restante en el ciclo ", sum(1 for food in self.foods if food.status))
+            print("----------------------------------------------")
 
             for i in range(self.cant_particles):
                 self.particles[i].recorrido = [] # Reiniciamos el recorrido para poder graficar de mejor manera
