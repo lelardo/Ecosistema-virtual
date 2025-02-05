@@ -426,6 +426,7 @@ class ejecutable:
             print("----------------------------------------------")
             print("😊 Particulas restantes en el ciclo ", len(self.particles))
             print("🍽 Comida restante en el ciclo ", sum(1 for food in self.foods if food.status))
+
             
             print("----------------------------------------------")
 
