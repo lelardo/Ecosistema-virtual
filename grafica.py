@@ -300,6 +300,12 @@ def crear_ventana():
     num_comidas_var = tk.StringVar(value="5")
     cant_pasos_var = tk.StringVar(value="15")
 
+    cicles = 6  # Puedes modificar para ingresar manualmente
+    cant_particles = 10 # CANTIDAD DE PARTICULAS A SIMULAR
+    num_puntos = 15 # El numero de puntos por lado de la cuadricula
+    num_comidas = 30 # Puedes modificar para ingresar manualmente
+    cant_pasos = 15  # Puedes modificar para ingresar
+
     # Etiquetas y campos de entrada para los valores
     tk.Label(ventana, text="🔄 Ciclos:", bg=AZUL_OSCURO).grid(row=0, column=0)
     cicles_entry = tk.Entry(ventana, textvariable=cicles_var, bg=AZUL_CLARO, fg="black")

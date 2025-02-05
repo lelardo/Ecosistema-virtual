@@ -19,10 +19,12 @@ class particle:
         self.full_food = False  # si esta lleno o no
         self.superpower = False  # si tiene superpoderes
         self.step_size = 1  # tamaño de paso
-        
+
         self.hunting = False  # si esta cazando o no
         self.target_food = None  # comida que esta cazando
-        self.smell_range = 2 # rango de olfato, es una varible que a futuro pueda ser mejorada
+        self.target_opinion = None  # bandera para saber si deja de cazar
+        self.invalid_foods = []  # lista de comidas imposibles de alcanzar
+        self.smell_range = 2  # rango de olfato, es una varible que a futuro pueda ser mejorada
 
         # tiempo de vida de la particula, mas bien deberian ser los pasos, pero yo no pongo las reglas
         self.lifetime = lifetime
@@ -46,59 +48,83 @@ class particle:
         )
 
     def detect_food_in_range(self):
-            if self.target_food and self.target_food.status:
-                return  # Si ya tiene objetivo y sigue existiendo, mantenerlo
-                
-            self.target_food = None
-            self.hunting = False
-            
-            for food in global_foods:
-                if not food.status:
-                    continue
-                    
-                dx = abs(food.Xaxis - self.Xaxis)
-                dy = abs(food.Yaxis - self.Yaxis)
-                
-                if dx <= self.smell_range and dy <= self.smell_range:
-                    self.target_food = food
-                    self.hunting = True
-                    print(f"👃 {self.name} ha detectado comida en ({food.Xaxis}, {food.Yaxis})")
-                    break
 
-    def is_valid_position(self, x, y): # detecta si la posicion no esta fuera del plano astral
-        # sapeamos si se salio de los limites, falso es que no se salio
-        return (0 <= x < global_dimension and 
+        if self.target_food and self.target_food.status:
+            return  # Si ya tiene objetivo y sigue existiendo, mantenerlo
+
+        self.target_food = None
+        self.hunting = False
+
+        for food in global_foods:
+            if not food.status:
+                continue
+
+            dx = abs(food.Xaxis - self.Xaxis)
+            dy = abs(food.Yaxis - self.Yaxis)
+
+            if dx <= self.smell_range and dy <= self.smell_range and food.id not in self.invalid_foods:
+                self.target_food = food
+                self.hunting = True
+                print(f"👃 {self.name} ha detectado comida en ({
+                      food.Xaxis}, {food.Yaxis})")
+                if self.detect_imposible_food():
+                    self.invalid_foods.append(food.id)
+                break
+
+    def detect_imposible_food(self):
+        if self.target_food != None:
+            dx = abs(self.Xaxis - self.target_food.Xaxis)
+            dy = abs(self.Yaxis - self.target_food.Yaxis)
+            print(f"🔍 {self.name} ha detectado que la comida en ({self.target_food.Xaxis}, {
+                  self.target_food.Yaxis}) es imposible de alcanzar")
+            return (dx % self.step_size == 0 and dy == 0) or (dy % self.step_size == 0 and dx == 0)
+        else:
+            return False
+
+    # detecta si la posicion no esta fuera del plano astral
+    def is_valid_position(self, x, y):
+        if self.is_someone_in_position(x, y):
+            return (0 <= x < global_dimension and
                 0 <= y < global_dimension and
                 not any(p.Xaxis == x and p.Yaxis == y for p in global_particles if p != self))
-
+        else:
+            return (0 <= x < global_dimension and
+                0 <= y < global_dimension)
+        
+    def is_someone_in_position(self, x, y):
+        for i in range(len(global_particles)):
+            if global_particles[i] != self and global_particles[i].Xaxis == x and global_particles[i].Yaxis == y:
+                return True
+        return False
+            
     def calculate_next_position(self):
-            # Asignar movimiento hacia la comida, dependiendo del tipo
-            if self.hunting and self.target_food:  # Si está cazando y tiene un objetivo de comida
-                dx = self.target_food.Xaxis - self.Xaxis  # Calcular la diferencia en el eje X
-                dy = self.target_food.Yaxis - self.Yaxis  # Calcular la diferencia en el eje Y
-                if abs(dx) >= abs(dy):  # Si la diferencia en X es mayor o igual que en Y
-                    # Mover en el eje X hacia la comida
-                    return (self.Xaxis + (self.step_size if dx > 0 else -self.step_size), self.Yaxis)
-                # Mover en el eje Y hacia la comida
-                return (self.Xaxis, self.Yaxis + (self.step_size if dy > 0 else -self.step_size))
-            else:
-                # Movimiento aleatorio
-                if simple_random_walk():  # Si el resultado del movimiento aleatorio es True
-                    # Mover en el eje X en una dirección aleatoria
-                    return (self.Xaxis + (self.step_size if simple_random_walk() else -self.step_size), self.Yaxis)
-                # Mover en el eje Y en una dirección aleatoria
-                return (self.Xaxis, self.Yaxis + (self.step_size if simple_random_walk() else -self.step_size))
+        # Asignar movimiento hacia la comida, dependiendo del tipo
+        if self.hunting and self.target_food:  # Si está cazando y tiene un objetivo de comida
+            dx = self.target_food.Xaxis - self.Xaxis  # Calcular la diferencia en el eje X
+            dy = self.target_food.Yaxis - self.Yaxis  # Calcular la diferencia en el eje Y
+            if abs(dx) >= abs(dy):  # Si la diferencia en X es mayor o igual que en Y
+                # Mover en el eje X hacia la comida
+                return (self.Xaxis + (self.step_size if dx > 0 else -self.step_size), self.Yaxis)
+            # Mover en el eje Y hacia la comida
+            return (self.Xaxis, self.Yaxis + (self.step_size if dy > 0 else -self.step_size))
+        else:
+            # Movimiento aleatorio
+            if simple_random_walk():  # Si el resultado del movimiento aleatorio es True
+                # Mover en el eje X en una dirección aleatoria
+                return (self.Xaxis + (self.step_size if simple_random_walk() else -self.step_size), self.Yaxis)
+            # Mover en el eje Y en una dirección aleatoria
+            return (self.Xaxis, self.Yaxis + (self.step_size if simple_random_walk() else -self.step_size))
 
     def check_intermediate_food(self, prev_x, prev_y, new_x, new_y):
         # Si está en un ciclo de cambio, retorna inmediatamente sin hacer nada
         if self.changing_cycle:
             return
-        
+
         # Crea un rango de valores X entre la posición previa y nueva (inclusive)
         x_range = range(min(prev_x, new_x), max(prev_x, new_x) + 1)
         # Crea un rango de valores Y entre la posición previa y nueva (inclusive)
         y_range = range(min(prev_y, new_y), max(prev_y, new_y) + 1)
-        
+
         # Itera sobre todos los alimentos disponibles en el juego
         for food in global_foods:
             # Verifica si:
@@ -106,54 +132,56 @@ class particle:
             # 2. La coordenada X del alimento está en el rango de movimiento
             # 3. La coordenada Y del alimento está en el rango de movimiento
             # 4. El alimento no está en la posición final del movimiento
-            if (food.status and 
-                food.Xaxis in x_range and 
-                food.Yaxis in y_range and 
-                not (food.Xaxis == new_x and food.Yaxis == new_y)):
-                
+            if (food.status and
+                food.Xaxis in x_range and
+                food.Yaxis in y_range and
+                    not (food.Xaxis == new_x and food.Yaxis == new_y)):
+
                 # Imprime mensaje indicando que se encontró comida
-                print(f"🍽  La partícula {self.name} ha pillado comida en la posición intermedia ({food.Xaxis}, {food.Yaxis})")
-                
+                print(f"🍽  La partícula {self.name} ha pillado comida en la posición intermedia ({
+                      food.Xaxis}, {food.Yaxis})")
+
                 # Si la partícula ya está llena y no tiene superpoderes, mejora su paso
                 if self.full_food and not self.superpower:
                     self.upgrade_step()
-                
+
                 # Marca la partícula como llena
                 self.full_food = True
-                
+
                 # Hace desaparecer la comida consumida
                 food.disappear()
 
     def simple_movement(self):
         # Detecta si hay comida en el rango de olfato de la partícula
         self.detect_food_in_range()
-        
         # Guarda la posición actual antes de moverse
         prev_x, prev_y = self.Xaxis, self.Yaxis
-        
+
         # Intenta hasta 4 direcciones diferentes para encontrar un movimiento válido
         for _ in range(4):
             # Calcula la siguiente posición basada en si está cazando o moviéndose aleatoriamente
             next_x, next_y = self.calculate_next_position()
-            
+
             # Verifica si la nueva posición es válida (dentro de límites y sin colisiones)
             if self.is_valid_position(next_x, next_y):
                 # Actualiza la posición de la partícula
                 self.Xaxis, self.Yaxis = next_x, next_y
-                
+
                 # Imprime la nueva posición y vida restante
-                print(f"➡️  {self.name}, posición actual: ({self.Xaxis}, {self.Yaxis}), vida restante: {self.lifetime}")
-                
+                print(f"➡️  {self.name}, posición actual: ({self.Xaxis}, {
+                      self.Yaxis}), vida restante: {self.lifetime}")
+
                 # Verifica si hay comida en el camino entre la posición anterior y la nueva
                 self.check_intermediate_food(prev_x, prev_y, next_x, next_y)
-                
+
                 # Añade la nueva posición al registro de recorrido
                 self.recorrido.append((self.Xaxis, self.Yaxis))
                 return
-        
+
         # Si no se encontró ningún movimiento válido, se queda en el mismo lugar
-        print(f"🚫 {self.name} no puede moverse desde ({self.Xaxis}, {self.Yaxis})")
-        
+        print(f"🚫 {self.name} no puede moverse desde ({
+              self.Xaxis}, {self.Yaxis})")
+
         # Añade la posición actual al recorrido aunque no se haya movido
         self.recorrido.append((self.Xaxis, self.Yaxis))
 
@@ -164,10 +192,10 @@ class particle:
               self.name} ha obtenido un superpoder, su tamaño de paso ha aumentado a {self.step_size}")
 
 
-
 # Clase que representa la comida
 class food:
-    def __init__(self, status, Xaxis, Yaxis):
+    def __init__(self, id, status, Xaxis, Yaxis):
+        self.id = id  # id de la comida
         self.status = status  # estado True es activa, False es porque se la comieron
         self.Xaxis = Xaxis  # eje x
         self.Yaxis = Yaxis  # eje y
@@ -189,7 +217,8 @@ class ejecutable:
         self.dimension = dimension  # dimension del universo, solo recibimos una porque va a ser cuadrado a menos que esto se cambie, lo que nos joderia mucho, ojala quen o pase
         self.particles = []  # arreglo de particulas
         # mapeado de las comidas para identificar zonas circuindantes
-        self.foodmap = [[None for i in range(dimension)] for j in range(dimension)]
+        self.foodmap = [[None for i in range(dimension)]
+                        for j in range(dimension)]
         self.foods_copy = (
             []
         )  # Arreglo auxiliar para poder llevar las comidas a una interfaz grafica
@@ -276,7 +305,8 @@ class ejecutable:
             print(f"La partícula {
                   self.particles[i].name} ha sido reubicada en la posición ({x}, {y})")
             self.particles[i].changing_cycle = False
-            self.particles[i].recorrido.append((x, y)) # Se añade punto de origen a la particula
+            # Se añade punto de origen a la particula
+            self.particles[i].recorrido.append((x, y))
 
     # Método que crea la comida en la simulación, nomas te pide la cantidad
     # de aumentar los atributos de la comida, creo que sufriremos aqui
@@ -298,7 +328,8 @@ class ejecutable:
         # Función que verifica si una posición ya está ocupada
         # esto se debe de optimizar, pero no se me ocurre como, si se te ocurre algo me dices
         # digo que se debe de optimizar por que es fuerza bruta, de haber mucha comida tardara revisando la posicion de cada una
-        def is_position_occupied(x, y):  # submetodo, va aqui porque es exclusivo de esta funcionalidad
+        # submetodo, va aqui porque es exclusivo de esta funcionalidad
+        def is_position_occupied(x, y):
             for food_item in self.foods:  # por cada comida
                 if (
                     food_item.Xaxis == x and food_item.Yaxis == y
@@ -312,13 +343,13 @@ class ejecutable:
                 # Generar posición aleatoria
                 Xaxis = random.randint(0, self.dimension - 1)
                 Yaxis = random.randint(0, self.dimension - 1)
-                
+
                 # Verificar si la posición está ocupada
                 if not is_position_occupied(
                     Xaxis, Yaxis
                 ):  # esto no es recursividad, es otro metodo mira bien
                     self.foods.append(
-                        food(True, Xaxis, Yaxis)
+                        food(i+1, True, Xaxis, Yaxis)
                     )  # mandamos la nueva comida calientita al array de comidas
                     break  # Salir del ciclo while cuando la posición es válida
 
@@ -407,10 +438,10 @@ class ejecutable:
 
             for _ in range(lifetime):
                 for i in range(self.cant_particles):
-                    
+
                     self.particles[i].simple_movement()
                     self.particles[i].lifetime -= 1
-                        
+
                 self.check_ate()
                 print("----------------------------------------------")
 
@@ -431,7 +462,8 @@ class ejecutable:
             print("----------------------------------------------")
 
             for i in range(self.cant_particles):
-                self.particles[i].recorrido = [] # Reiniciamos el recorrido para poder graficar de mejor manera
+                # Reiniciamos el recorrido para poder graficar de mejor manera
+                self.particles[i].recorrido = []
             # Depurar y reiniciar atributos para el próximo ciclo
             self.depurate_particles()
             self.restore_health()
